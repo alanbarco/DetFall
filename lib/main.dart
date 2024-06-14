@@ -4,15 +4,18 @@ import 'package:falldetapp/services/BLEService.dart';
 import 'package:falldetapp/services/apiService.dart';
 import 'package:falldetapp/services/notificactionService.dart';
 import 'package:falldetapp/views/connection.dart';
+import 'package:falldetapp/views/controllert.dart';
 import 'package:falldetapp/views/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:get/get.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
   runApp(const MyApp());
+  Get.put(InternetController(), permanent: true);
 }
 
 class MyHttpOverrides extends HttpOverrides {
