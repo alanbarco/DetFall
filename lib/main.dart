@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'DetFall',
         theme: ThemeData(
@@ -136,8 +136,8 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Dectector',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_applications_rounded),
-            label: 'Opciones',
+            icon: Icon(Icons.person_rounded),
+            label: 'Perfil',
           ),
         ],
         selectedItemColor: Color.fromARGB(255, 68, 170, 153),
