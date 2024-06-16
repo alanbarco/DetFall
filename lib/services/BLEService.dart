@@ -5,13 +5,13 @@ class BLEService {
   final FlutterBlue _flutterBlue = FlutterBlue.instance;
 
   FlutterBlue get flutterBlue => _flutterBlue;
-
   Future<void> startScanning() async {
     final status = await Permission.location.request();
     if (await Permission.bluetoothScan.request().isGranted) {
       if (await Permission.bluetoothConnect.request().isGranted) {
         final serviceUuids = [
           Guid('19B10000-E8F2-537E-4F6C-D104768A1214'),
+          Guid('143C87E6-058A-43E7-9D75-FBBEA5C3C157')
         ];
         await _flutterBlue.startScan(
             timeout: const Duration(seconds: 15), withServices: serviceUuids);

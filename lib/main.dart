@@ -50,10 +50,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final BLEService _bleService = BLEService();
-  BluetoothDevice? _connectedDevice;
+  List<BluetoothDevice> _connectedDevices = [];
   int _currentIndex = 0;
   final ApiService apiService = ApiService();
-
+  List<String> serviciosBLE = [
+    "143c87e6-058a-43e7-9d75-fbbea5c3c157",
+    "19b10000-e8f2-537e-4f6c-d104768a1214"
+  ];
   //PRUEBAS
   int _signalCount = 0;
   Timer? _timer;
@@ -94,26 +97,25 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           ConnectionView(
             bleService: _bleService, // Pass the BLEManager instance
-            connectedDevice: _connectedDevice,
-            onDeviceConnected: (BluetoothDevice? device) async {
+            connectedDevices: _connectedDevices,
+            onDevicesConnected: (List<BluetoothDevice> devices) async {
               setState(() {
-                _connectedDevice = device;
+                _connectedDevices = devices;
               });
-
-              if (device != null) {
-                print('Connected to ${device.name}');
-                List<BluetoothService> services =
-                    await device.discoverServices();
-                for (var service in services) {
-                  if (service.uuid.toString() ==
-                      '19b10000-e8f2-537e-4f6c-d104768a1214') {
-                    print('Found the correct service');
-                    var characteristics = service.characteristics;
-                    for (BluetoothCharacteristic c in characteristics) {
-                      if (c.uuid.toString() ==
-                          '19b10001-e8f2-537e-4f6c-d104768a1214') {
-                        print('Found the correct characteristic');
-                        _listenToCharacteristic(c);
+              for (var device in devices) {
+                if (device != null) {
+                  print('Connected to ${device.name}');
+                  List<BluetoothService> services =
+                      await device.discoverServices();
+                  for (var service in services) {
+                    if (serviciosBLE.contains(service.uuid.toString())) {
+                      print('Found the correct service');
+                      var characteristics = service.characteristics;
+                      for (BluetoothCharacteristic c in characteristics) {
+                        if (serviciosBLE.contains(c.uuid.toString())) {
+                          print('Found the correct characteristic');
+                          _listenToCharacteristic(c);
+                        }
                       }
                     }
                   }

@@ -4,24 +4,26 @@ import 'package:falldetapp/services/BLEService.dart';
 import 'package:falldetapp/services/notificactionService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+
 class ConnectionView extends StatefulWidget {
   final BLEService bleService;
-  final void Function(BluetoothDevice?) onDeviceConnected;
-  final BluetoothDevice? connectedDevice;
+  final void Function(List<BluetoothDevice>) onDevicesConnected;
+  final List<BluetoothDevice>? connectedDevices;
 
   const ConnectionView({
     required this.bleService,
-    required this.onDeviceConnected,
-    required this.connectedDevice,
+    required this.onDevicesConnected,
+    required this.connectedDevices,
   });
 
   @override
   _ConnectionViewState createState() => _ConnectionViewState();
 }
 
-class _ConnectionViewState extends State<ConnectionView> {  
+class _ConnectionViewState extends State<ConnectionView> {
   StreamSubscription? _scanSubscription;
   List<BluetoothDevice> filteredDevices = [];
   List<BluetoothDevice> connectedDevices = [];
@@ -40,6 +42,18 @@ class _ConnectionViewState extends State<ConnectionView> {
         widget.bleService.startScanning();
       }
     });
+  }
+
+  void connectToDevices() async {
+    for (var device in filteredDevices) {
+      if (connectedDevices.length < 2 && !connectedDevices.contains(device)) {
+        await widget.bleService.connect(device);
+        setState(() {
+          connectedDevices.add(device);
+        });
+      }
+    }
+    widget.onDevicesConnected(connectedDevices);
   }
 
   @override
@@ -62,7 +76,7 @@ class _ConnectionViewState extends State<ConnectionView> {
             .where((device) => device.name.isNotEmpty)
             .toList();
 
-        if (widget.connectedDevice != null) {
+        if (widget.connectedDevices!.isNotEmpty) {
           notificacionConexion();
           return Center(
             child: Container(
@@ -76,12 +90,16 @@ class _ConnectionViewState extends State<ConnectionView> {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
+                        SvgPicture.asset(
+                          'assets/images/check.svg',
+                          height: 100,
+                          width: 100,
+                        ),
                         ListTile(
                             title: Center(
-                          child: Text(
-                              'Detector conectado correctamente!',
+                          child: Text('Detector enlazado correctamente!',
                               style: const TextStyle(
-                                  fontSize: 24, fontWeight: FontWeight.bold)),
+                                  fontSize: 20, fontWeight: FontWeight.bold)),
                         )),
                         // Image.asset('assets/images/alert_icon.png', height: 150),
                         ElevatedButton(
@@ -91,9 +109,10 @@ class _ConnectionViewState extends State<ConnectionView> {
                             fixedSize: const Size(200, 50),
                           ),
                           onPressed: () async {
-                            await widget.bleService
-                                .disconnect(widget.connectedDevice!);
-                            widget.onDeviceConnected(null);
+                            for (var device in widget.connectedDevices!) {
+                              await widget.bleService.disconnect(device);
+                              widget.onDevicesConnected([]);
+                            }
                           },
                           child: const Text('Desconectar'),
                         ),
@@ -110,69 +129,57 @@ class _ConnectionViewState extends State<ConnectionView> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
-              // Center(
-              //   child: ElevatedButton(
-              //     onPressed: () => apiPrueba(),
-              //     child: Text('Haz clic aquí'),
-              //   ),
-              // )
             ],
           );
         } else {
-          return ListView.builder(
-            itemCount: filteredDevices.length,
-            itemBuilder: (context, index) {
-              final device = filteredDevices[index];
-              return Card(
-                margin: const EdgeInsets.all(40),
-                color: Colors.black87,
-                elevation: 2,
-                child: ListTile(
-                  title: Center(
-                      child: Text(
-                    device.name,
-                    style: const TextStyle(color: Colors.white),
-                  )),
-                  //subtitle: Text(device.id.toString()),
-                  onTap: () async {
-                          if (connectedDevices.length < 2 && !connectedDevices.contains(device)) {
-                            await widget.bleService.stopScanning();
-                            await widget.bleService.connect(device);
-                            setState(() {
-                              connectedDevices.add(device);
-                            });
-                            widget.onDeviceConnected(device);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('ERROR.'))
-                            );
-                          }
-                        },
-                ),
-              );
-            },
-          );
+          return Column(children: [
+            SizedBox(width: 40),
+            SvgPicture.asset(
+              'assets/images/falling.svg',
+              height: 100,
+              width: 100,
+            ),
+            Container(
+                height: 250,
+                child: Card(
+                  margin: const EdgeInsets.all(40),
+                  color: Color.fromARGB(221, 15, 76, 81),
+                  elevation: 2,
+                  child: ListTile(
+                    title: Center(
+                        child: Text(
+                      'Presiona para enlazar el detector',
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    )),
+                    //subtitle: Text(device.id.toString()),
+                    onTap:
+                        filteredDevices.length >= 2 ? connectToDevices : null,
+                  ),
+                ))
+          ]);
         }
       },
     );
   }
 }
-  Future<bool> apiPrueba() async {
-    try {
-      final response = await http.post(
-          Uri.parse("http://192.168.100.60:8000/alerta"),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(
-              <String, String>{"mensaje": "prueba", "location": "prueba"}));
-      if (response.statusCode == 200) {
-        return true;
-      }else{
-        return false;
-      }
-    } catch (e) {
-      print('Error al enviar alerta a API externa: $e');
+
+Future<bool> apiPrueba() async {
+  try {
+    final response = await http.post(
+        Uri.parse("http://192.168.100.60:8000/alerta"),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(
+            <String, String>{"mensaje": "prueba", "location": "prueba"}));
+    if (response.statusCode == 200) {
+      return true;
+    } else {
       return false;
     }
+  } catch (e) {
+    print('Error al enviar alerta a API externa: $e');
+    return false;
   }
+}
