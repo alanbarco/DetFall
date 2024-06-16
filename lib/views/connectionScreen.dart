@@ -143,7 +143,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                 height: 250,
                 child: Card(
                   margin: const EdgeInsets.all(40),
-                  color: Color.fromARGB(221, 15, 76, 81),
+                  color: Color.fromARGB(221, 20, 70, 124),
                   elevation: 2,
                   child: ListTile(
                     title: Center(

@@ -42,6 +42,7 @@ dependencies:
   stetho_network_inspector: ^0.5.4
   flutter_svg: ^1.0.3
   flutter_local_notifications: ^17.1.2
+  shared_preferences: ^2.2.3
 
 
 dev_dependencies:
