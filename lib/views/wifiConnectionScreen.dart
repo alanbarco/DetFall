@@ -8,16 +8,23 @@ class InternetController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _checkInitialConnection(); // Verifica el estado de la conexión al iniciar
     _connectivity.onConnectivityChanged.listen(Netstatus);
   }
 
+  // Verifica el estado de la conexión al iniciar
+  void _checkInitialConnection() async {
+    ConnectivityResult result = await _connectivity.checkConnectivity();
+    Netstatus(result);
+  }
+
   // ignore: non_constant_identifier_names
-  Netstatus(ConnectivityResult cr){
-    if (cr == ConnectivityResult.none ) {
+  void Netstatus(ConnectivityResult cr) {
+    if (cr == ConnectivityResult.none) {
       Get.rawSnackbar(
         titleText: SizedBox(
           width: double.infinity,
-          height: Get.size.height*(.954),
+          height: Get.size.height * (.954),
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -34,8 +41,8 @@ class InternetController extends GetxController {
         isDismissible: false,
         duration: const Duration(days: 1),
       );
-    }else{
-      if(Get.isSnackbarOpen){
+    } else {
+      if (Get.isSnackbarOpen) {
         Get.closeCurrentSnackbar();
       }
     }

@@ -10,12 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:get/get.dart';
 
-Future main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
-  runApp(const MyApp());
   Get.put(InternetController(), permanent: true);
+  runApp(const MyApp());
 }
 
 class MyHttpOverrides extends HttpOverrides {
