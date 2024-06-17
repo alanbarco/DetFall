@@ -97,7 +97,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                         ),
                         ListTile(
                             title: Center(
-                          child: Text('Detector enlazado correctamente!',
+                          child: Text('Detector enlazado correctamente!\nAnalizando movimientos...',
                               style: const TextStyle(
                                   fontSize: 20, fontWeight: FontWeight.bold)),
                         )),
@@ -119,7 +119,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                       ])),
             ),
           );
-        } else if (filteredDevices.isEmpty) {
+        } else if (filteredDevices.isEmpty || filteredDevices.length < 2) {
           return Column(
             children: [
               SizedBox(height: 160),
@@ -135,7 +135,7 @@ class _ConnectionViewState extends State<ConnectionView> {
           return Column(children: [
             SizedBox(width: 40),
             SvgPicture.asset(
-              'assets/images/falling.svg',
+              'assets/images/ble.svg',
               height: 100,
               width: 100,
             ),
@@ -148,13 +148,12 @@ class _ConnectionViewState extends State<ConnectionView> {
                   child: ListTile(
                     title: Center(
                         child: Text(
-                      'Presiona para enlazar el detector',
+                      'Presiona para vincular con el detector',
                       style: const TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold),
                     )),
                     //subtitle: Text(device.id.toString()),
-                    onTap:
-                        filteredDevices.length >= 2 ? connectToDevices : null,
+                    onTap: connectToDevices ,
                   ),
                 ))
           ]);

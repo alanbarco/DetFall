@@ -71,7 +71,8 @@ class _FormScreenState extends State<FormScreen> {
                   labelStyle: TextStyle(color: Colors.black), // Color del label
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
-                        color: Color.fromARGB(221, 20, 70, 124)), // Borde cuando está enfocado
+                        color: Color.fromARGB(
+                            221, 20, 70, 124)), // Borde cuando está enfocado
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
@@ -92,7 +93,8 @@ class _FormScreenState extends State<FormScreen> {
                   labelStyle: TextStyle(color: Colors.black), // Color del label
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
-                        color: Color.fromARGB(221, 20, 70, 124)), // Borde cuando está enfocado
+                        color: Color.fromARGB(
+                            221, 20, 70, 124)), // Borde cuando está enfocado
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
@@ -103,6 +105,8 @@ class _FormScreenState extends State<FormScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor ingresa tu número celular';
+                  } else if (value.length != 10) {
+                    return 'El número celular debe tener 10 caracteres';
                   }
                   return null;
                 },
