@@ -17,7 +17,6 @@ class ApiService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? name = prefs.getString('nombre');
     String? phone = prefs.getString('celular');
-
     try {
       print("enviando a API...");
       final response = await http.post(

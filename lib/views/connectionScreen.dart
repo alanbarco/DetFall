@@ -46,7 +46,7 @@ class _ConnectionViewState extends State<ConnectionView> {
 
   void connectToDevices() async {
     for (var device in filteredDevices) {
-      if (connectedDevices.length < 2 && !connectedDevices.contains(device)) {
+      if (!connectedDevices.contains(device)) {
         await widget.bleService.connect(device);
         setState(() {
           connectedDevices.add(device);
@@ -119,7 +119,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                       ])),
             ),
           );
-        } else if (filteredDevices.isEmpty || filteredDevices.length < 2) {
+        } else if (filteredDevices.isEmpty) {
           return Column(
             children: [
               SizedBox(height: 160),

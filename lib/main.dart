@@ -53,9 +53,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   List<BluetoothDevice> _connectedDevices = [];
   int _currentIndex = 0;
   final ApiService apiService = ApiService();
+  // List<String> serviciosBLE = [
+  //   "143c87e6-058a-43e7-9d75-fbbea5c3c157",
+  //   "19b10000-e8f2-537e-4f6c-d104768a1214"
+  // ];
   List<String> serviciosBLE = [
-    "143c87e6-058a-43e7-9d75-fbbea5c3c157",
-    "19b10000-e8f2-537e-4f6c-d104768a1214"
+    "143c87e6-058a-43e7-9d75-fbbea5c3c157"
   ];
   //PRUEBAS
   int _signalCount = 0;
