@@ -48,7 +48,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   final BLEService _bleService = BLEService();
   List<BluetoothDevice> _connectedDevices = [];
   int _currentIndex = 0;
@@ -61,6 +61,28 @@ class _MyHomePageState extends State<MyHomePage> {
   int _signalCount = 0;
   Timer? _timer;
   bool _isAlertSent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Escucha eventos cuando la app está en foreground
+    WidgetsBinding.instance.addObserver(this);
+  }
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    super.dispose();
+  }
+   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Mostrar diálogo cuando la aplicación vuelve al primer plano
+      if (_isAlertSent) {
+        _showFallDetectedDialog();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,16 +126,13 @@ class _MyHomePageState extends State<MyHomePage> {
               });
               for (var device in devices) {
                 if (device != null) {
-                  print('Connected to ${device.name}');
                   List<BluetoothService> services =
                       await device.discoverServices();
                   for (var service in services) {
                     if (serviciosBLE.contains(service.uuid.toString())) {
-                      print('Found the correct service');
                       var characteristics = service.characteristics;
                       for (BluetoothCharacteristic c in characteristics) {
                         if (serviciosBLE.contains(c.uuid.toString())) {
-                          print('Found the correct characteristic');
                           _listenToCharacteristic(c);
                         }
                       }
@@ -151,12 +170,14 @@ class _MyHomePageState extends State<MyHomePage> {
     c.setNotifyValue(true);
     c.value.listen((value) {
       if (value.isNotEmpty && value[0] == 1) {
-        if (_isAlertSent) {
-          _signalCount = 0;
-          _isAlertSent = false;
-        }
         _timer?.cancel();
-        _signalCount++;
+
+        if (_isAlertSent) {
+          _isAlertSent = false;
+        } else {
+          _signalCount++;
+        }
+
         _timer = Timer(Duration(seconds: 15), () {
           setState(() {
             _signalCount = 0;
@@ -165,44 +186,52 @@ class _MyHomePageState extends State<MyHomePage> {
 
         if (_signalCount == 1) {
           _sendAlert();
-          _signalCount = 0;
           _isAlertSent = true;
+          _signalCount = 0;
         }
       }
     });
   }
 
   Future<void> _sendAlert() async {
-    print("ENVIANDO ALERTA...");
-    // bool apiCallSuccess = (await externalApiService.sendAlertToExternalApi("https://200.10.147.201:5025/api/BotonPanic"));
-    bool apiCallSuccess = (await apiService.apiPrueba());
-    if (apiCallSuccess) {
-      notificacionCaida();
-      // showDialog(
-      //   context: context,
-      //   builder: (BuildContext context) {
-      //     final alertDialog = AlertDialog(
-      //       title: Text('Alerta'),
-      //       content: Text('¡Alerta enviada!'),
-      //       actions: [
-      //         ElevatedButton(
-      //           onPressed: () {
-      //             Navigator.of(context).pop();
-      //           },
-      //           child: Text('Cerrar'),
-      //         ),
-      //       ],
-      //     );
-
-      //     Timer(Duration(seconds: 5), () {
-      //       Navigator.of(context).pop();
-      //     });
-
-      //     return alertDialog;
-      //   },
-      // );
-    } else {
-      print('Failed to send alert to either Twilio or the external API.');
-    }
+    _isAlertSent = true;
+    await showNotificationWithSound();
+     _timer = Timer(Duration(minutes: 1), () async {
+      if (_isAlertSent) {
+        print("ENVIANDO ALERTA...");
+        bool apiCallSuccess = await apiService.apiPrueba();
+        if (apiCallSuccess) {
+          notificacionCaida();
+        } else {
+          print('Fallo al enviar la alerta a la API.');
+        }
+        _isAlertSent = false;
+      }
+    });
+  }
+  void _showFallDetectedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents closing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Alerta'),
+          content: Text('Se detectó una caída, ¿es correcto?'),
+          actions: [
+            ElevatedButton(
+              onPressed: () async {
+                // User pressed NO, cancel the alert and reset the state
+                _isAlertSent = false;
+                _signalCount = 0;
+                _timer?.cancel();
+                await flutterLocalNotificationsPlugin.cancel(0);
+                Navigator.of(context).pop();
+              },
+              child: Text('NO'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

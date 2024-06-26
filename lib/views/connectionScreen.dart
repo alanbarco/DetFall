@@ -77,7 +77,7 @@ class _ConnectionViewState extends State<ConnectionView> {
             .toList();
 
         if (widget.connectedDevices!.isNotEmpty) {
-          notificacionConexion();
+          // notificacionConexion();
           return Center(
             child: Container(
               height: 400,
@@ -148,7 +148,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                   child: ListTile(
                     title: Center(
                         child: Text(
-                      'Presiona para vincular con el detector',
+                      'Presiona para enlazar el detector',
                       style: const TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold),
                     )),

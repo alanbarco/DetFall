@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   String token =
@@ -13,14 +14,19 @@ class ApiService {
     return await _sendAlertToApi(apiUrl, code, locationMessage);
   }
   Future<bool> apiPrueba() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? name = prefs.getString('nombre');
+    String? phone = prefs.getString('celular');
+
     try {
+      print("enviando a API...");
       final response = await http.post(
-          Uri.parse("http://192.168.100.60:8000/alerta"),
+          Uri.parse("http://192.168.100.88:8000/alerta"),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
           body: jsonEncode(
-              <String, String>{"mensaje": "prueba", "location": "prueba"}));
+              <String, String>{"mensaje": "Nombre de persona en emergencia: ${name} Celular:${phone}", "location": "prueba"}));
       if (response.statusCode == 200) {
         return true;
       }else{
