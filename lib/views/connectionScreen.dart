@@ -27,6 +27,7 @@ class _ConnectionViewState extends State<ConnectionView> {
   StreamSubscription? _scanSubscription;
   List<BluetoothDevice> filteredDevices = [];
   List<BluetoothDevice> connectedDevices = [];
+  bool _isButtonEnabled = true;
 
   @override
   void initState() {
@@ -45,6 +46,9 @@ class _ConnectionViewState extends State<ConnectionView> {
   }
 
   void connectToDevices() async {
+    setState(() {
+      _isButtonEnabled = false;
+    });
     for (var device in filteredDevices) {
       if (!connectedDevices.contains(device)) {
         await widget.bleService.connect(device);
@@ -54,6 +58,10 @@ class _ConnectionViewState extends State<ConnectionView> {
       }
     }
     widget.onDevicesConnected(connectedDevices);
+    await Future.delayed(Duration(seconds: 5));
+    setState(() {
+      _isButtonEnabled = true;
+    });
   }
 
   @override
@@ -65,16 +73,23 @@ class _ConnectionViewState extends State<ConnectionView> {
 
   @override
   Widget build(BuildContext context) {
+    final List<String> serviceUuids= ["143c87e6-058a-43e7-9d75-fbbea5c3c157", "19b10000-e8f2-537e-4f6c-d104768a1214"];
+    final serviceUuid = '143c87e6-058a-43e7-9d75-fbbea5c3c157';
     // List<BluetoothDevice> filteredDevices = [];
     return StreamBuilder<List<ScanResult>>(
       stream: widget.bleService.flutterBlue.scanResults,
       initialData: [],
+      
       builder: (context, snapshot) {
         final scanResults = snapshot.data!;
+        // filteredDevices = scanResults
+        //                   .where((scanResult) => scanResult.advertisementData.serviceUuids.contains(serviceUuid))
+        //                   .map((scanResult) => scanResult.device)
+        //                   .toList();
         filteredDevices = scanResults
-            .map((scanResult) => scanResult.device)
-            .where((device) => device.name.isNotEmpty)
-            .toList();
+                          .where((scanResult) => serviceUuids.any((uuid) => scanResult.advertisementData.serviceUuids.contains(uuid)))
+                          .map((scanResult) => scanResult.device)
+                          .toList();
 
         if (widget.connectedDevices!.isNotEmpty) {
           // notificacionConexion();
@@ -153,7 +168,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                           color: Colors.white, fontWeight: FontWeight.bold),
                     )),
                     //subtitle: Text(device.id.toString()),
-                    onTap: connectToDevices ,
+                   onTap: _isButtonEnabled ? connectToDevices : null,
                   ),
                 ))
           ]);

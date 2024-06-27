@@ -20,7 +20,7 @@ class ApiService {
     try {
       print("enviando a API...");
       final response = await http.post(
-          Uri.parse("http://192.168.100.88:8000/alerta"),
+          Uri.parse("https://apidetfall.onrender.com/alerta"),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
