@@ -283,7 +283,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             style: TextStyle(color: Colors.white), // Texto blanco
           ),
           content: Text(
-            'Se detectó una caída, ¿es correcto?',
+            'Se detectó una señal de emergencia, ¿es correcto?',
             style: TextStyle(color: Colors.white), // Texto blanco
           ),
           actions: [

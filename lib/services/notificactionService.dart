@@ -33,7 +33,7 @@ Future<void> notificacionCaida() async{
 
 Future<void> showNotificationWithSound() async {
   AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'Detección de caída', 'Se detectó una caída, está bien?',
+    'Detección de emergencia', 'Se detectó una señal de emergencia, está bien?',
     importance: Importance.max,
     priority: Priority.high,
     sound: RawResourceAndroidNotificationSound('notification'),
@@ -47,7 +47,7 @@ Future<void> showNotificationWithSound() async {
 
   await flutterLocalNotificationsPlugin.show(
     0,
-    'Se detectó una caída!',
+    'Se detectó una emergencia!',
     'Confirmar si es correcto',
     platformChannelSpecifics,
     payload: 'item x',
