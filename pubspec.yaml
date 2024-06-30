@@ -46,6 +46,7 @@ dependencies:
   vibration: ^1.7.4
   flutter_bluetooth_serial:
   location:
+  flutter_screenutil: ^5.0.0+2
 
 
 dev_dependencies:

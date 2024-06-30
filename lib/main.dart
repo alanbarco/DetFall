@@ -7,8 +7,10 @@ import 'package:falldetapp/views/connectionScreen.dart';
 import 'package:falldetapp/views/wifiConnectionScreen.dart';
 import 'package:falldetapp/views/splashScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:get/get.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,13 +34,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'DetFall',
-        theme: ThemeData(
-          primarySwatch: Colors.blueGrey,
-        ),
-        home: SplashScreen());
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      builder: (context, child) {
+        return GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'DetFall',
+          theme: ThemeData(
+            primarySwatch: Colors.blueGrey,
+          ),
+          home: child,
+        );
+      },
+      child: SplashScreen(),
+    );
   }
 }
 
@@ -48,7 +57,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final BLEService _bleService = BLEService();
   List<BluetoothDevice> _connectedDevices = [];
   int _currentIndex = 0;
@@ -58,10 +67,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     "19b10000-e8f2-537e-4f6c-d104768a1214",
     "19b10001-e8f2-537e-4f6c-d104768a1214",
   ];
-  // List<String> serviciosBLE = [
-  //   "19b10000-e8f2-537e-4f6c-d104768a1214"
-  // ];
-  //PRUEBAS
+
   int _signalCount = 0;
   Timer? _timer;
   bool _isAlertSent = false;
@@ -72,13 +78,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     // Escucha eventos cuando la app está en foreground
     WidgetsBinding.instance.addObserver(this);
   }
-  @override 
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }
-   @override
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Mostrar diálogo cuando la aplicación vuelve al primer plano
@@ -128,19 +136,56 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
               setState(() {
                 _connectedDevices = devices;
               });
+
               for (var device in devices) {
                 if (device != null) {
-                  List<BluetoothService> services =
-                      await device.discoverServices();
-                  for (var service in services) {
-                    if (serviciosBLE.contains(service.uuid.toString())) {
-                      var characteristics = service.characteristics;
-                      for (BluetoothCharacteristic c in characteristics) {
-                        if (serviciosBLE.contains(c.uuid.toString())) {
-                          _listenToCharacteristic(c);
+                  try {
+                    // Verifica si el dispositivo está conectado
+                    BluetoothDeviceState state = await device.state.first;
+                    if (state == BluetoothDeviceState.connected) {
+                      // Si está conectado, descubre servicios
+                      List<BluetoothService> services =
+                          await device.discoverServices();
+                      for (var service in services) {
+                        if (serviciosBLE.contains(service.uuid.toString())) {
+                          var characteristics = service.characteristics;
+                          for (BluetoothCharacteristic c in characteristics) {
+                            if (serviciosBLE.contains(c.uuid.toString())) {
+                              _listenToCharacteristic(c);
+                            }
+                          }
                         }
                       }
+                    } else {
+                      // Si no está conectado, conéctate primero
+                      await device.connect();
+                      // Verifica nuevamente si el dispositivo está conectado
+                      state = await device.state.first;
+                      if (state == BluetoothDeviceState.connected) {
+                        List<BluetoothService> services =
+                            await device.discoverServices();
+                        for (var service in services) {
+                          if (serviciosBLE.contains(service.uuid.toString())) {
+                            var characteristics = service.characteristics;
+                            for (BluetoothCharacteristic c in characteristics) {
+                              if (serviciosBLE.contains(c.uuid.toString())) {
+                                _listenToCharacteristic(c);
+                              }
+                            }
+                          }
+                        }
+                      } else {
+                        print('Error: El dispositivo no se pudo conectar.');
+                      }
                     }
+                  } on PlatformException catch (e) {
+                    if (e.code == 'already_connected') {
+                      print('Error: El dispositivo ya está conectado.');
+                    } else {
+                      print('Error: $e');
+                    }
+                  } catch (e) {
+                    print('Error: $e');
                   }
                 }
               }
@@ -200,7 +245,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   Future<void> _sendAlert() async {
     _isAlertSent = true;
     await showNotificationWithSound();
-     _timer = Timer(Duration(minutes: 1), () async {
+    _showFallDetectedDialog();
+    _timer = Timer(Duration(minutes: 1), () async {
       if (_isAlertSent) {
         print("ENVIANDO ALERTA...");
         bool apiCallSuccess = await apiService.apiPrueba();
@@ -213,16 +259,40 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       }
     });
   }
+  Future<void> _sendImmediateAlert() async {
+  print("ENVIANDO ALERTA...");
+  bool apiCallSuccess = await apiService.apiPrueba();
+  if (apiCallSuccess) {
+    notificacionCaida();
+  } else {
+    print('Fallo al enviar la alerta a la API.');
+  }
+}
+
   void _showFallDetectedDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevents closing the dialog by tapping outside
+      barrierDismissible:
+          false, // Prevents closing the dialog by tapping outside
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Alerta'),
-          content: Text('Se detectó una caída, ¿es correcto?'),
+          backgroundColor:
+              Color.fromARGB(255, 239, 22, 22), // Color de fondo azul oscuro
+          title: Text(
+            'Alerta',
+            style: TextStyle(color: Colors.white), // Texto blanco
+          ),
+          content: Text(
+            'Se detectó una caída, ¿es correcto?',
+            style: TextStyle(color: Colors.white), // Texto blanco
+          ),
           actions: [
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Color.fromARGB(
+                    255, 239, 22, 22), // Color de fondo del botón azul oscuro
+                onPrimary: Colors.white, // Color del texto del botón blanco
+              ),
               onPressed: () async {
                 // User pressed NO, cancel the alert and reset the state
                 _isAlertSent = false;
@@ -233,9 +303,27 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
               },
               child: Text('NO'),
             ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary:
+                    const Color.fromARGB(255, 207, 61, 61), // Color de fondo del botón rojo oscuro
+                onPrimary: Colors.white, // Color del texto del botón blanco
+              ),
+              onPressed: () async {
+                // Usuario presionó SÍ, enviar la alerta de inmediato
+                _isAlertSent =
+                    false; // Cancelar el temporizador si está corriendo
+                _timer?.cancel(); // Cancelar el temporizador si está corriendo
+                await _sendImmediateAlert();
+                Navigator.of(context).pop();
+              },
+              child: Text('SÍ'),
+            ),
           ],
         );
       },
     );
   }
 }
+
+
