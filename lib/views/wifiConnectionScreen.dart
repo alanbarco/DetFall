@@ -38,7 +38,7 @@ void _showInternetDisconnectedMessage() {
     Get.rawSnackbar(
       titleText: SizedBox(
         width: double.infinity,
-        height: Get.size.height * (.99),
+        height: Get.size.height * (.948),
         child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
