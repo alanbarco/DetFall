@@ -60,7 +60,7 @@ class _ConnectionViewState extends State<ConnectionView> {
       }
     }
     widget.onDevicesConnected(connectedDevices);
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 90));
     setState(() {
       _isButtonEnabled = true;
       _isLoading = false;
