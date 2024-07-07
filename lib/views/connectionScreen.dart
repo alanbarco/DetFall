@@ -60,7 +60,7 @@ class _ConnectionViewState extends State<ConnectionView> {
       }
     }
     widget.onDevicesConnected(connectedDevices);
-    await Future.delayed(Duration(seconds: 90));
+    await Future.delayed(Duration(seconds: 10));
     setState(() {
       _isButtonEnabled = true;
       _isLoading = false;
@@ -78,7 +78,7 @@ class _ConnectionViewState extends State<ConnectionView> {
   Widget build(BuildContext context) {
     final List<String> serviceUuids = [
       "143c87e6-058a-43e7-9d75-fbbea5c3c157",
-      "19b10000-e8f2-537e-4f6c-d104768a1214"
+      "19b10000-e8f2-537e-4f6c-d104768a1214",
     ];
     final sachaUuid = '143c87e6-058a-43e7-9d75-fbbea5c3c157';
     final caidaUuid = '19b10000-e8f2-537e-4f6c-d104768a1214';
@@ -93,11 +93,13 @@ class _ConnectionViewState extends State<ConnectionView> {
         //                   .where((scanResult) => scanResult.advertisementData.serviceUuids.contains(serviceUuid))
         //                   .map((scanResult) => scanResult.device)
         //                   .toList();
-        filteredDevices = scanResults
-            .where((scanResult) => serviceUuids.any((uuid) =>
-                scanResult.advertisementData.serviceUuids.contains(uuid)))
-            .map((scanResult) => scanResult.device)
-            .toList();
+        // filteredDevices = scanResults
+        //     .where((scanResult) => serviceUuids.any((uuid) =>
+        //         scanResult.advertisementData.serviceUuids.contains(uuid)))
+        //     .map((scanResult) => scanResult.device)
+        //     .toList();
+        filteredDevices = scanResults.map((result) => result.device).toList();
+
         bool hasFallDetector = filteredDevices.any((device) {
           return device.name.contains("DetFall");
         });
@@ -187,7 +189,8 @@ class _ConnectionViewState extends State<ConnectionView> {
                                   SizedBox(
                                       height: 8), // Espacio entre los textos
                                   Text(
-                                    hasFallDetectorConnected ? 'Caídas' : '',
+                                    // hasFallDetectorConnected ? 'Movimientos' : '',
+                                    'Movimientos',
                                     style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.normal,
@@ -239,7 +242,7 @@ class _ConnectionViewState extends State<ConnectionView> {
             ),
             ListTile(
               title: Text(
-                'Funcionalidades disponibles:',
+                'Sensores disponibles:',
                 style: TextStyle(
                   fontSize: 20, // Tamaño del texto
                   fontWeight: FontWeight
@@ -249,10 +252,10 @@ class _ConnectionViewState extends State<ConnectionView> {
             ),
             ListTile(
               leading: Icon(
-                hasFallDetector ? Icons.check_circle : Icons.cancel,
-                color: hasFallDetector ? Colors.green : Colors.red,
+                Icons.check_circle,
+                color:  Colors.green,
               ),
-              title: Text('Caídas'),
+              title: Text('Movimientos'),
             ),
             ListTile(
               leading: Icon(

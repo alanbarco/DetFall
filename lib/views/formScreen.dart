@@ -28,7 +28,7 @@ class _FormScreenState extends State<FormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: Color.fromARGB(255, 225, 228, 229),
+          backgroundColor: Color.fromARGB(255, 25, 40, 76),
           elevation: 0,
           toolbarHeight: 80,
           centerTitle: false,
@@ -42,7 +42,7 @@ class _FormScreenState extends State<FormScreen> {
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: Color.fromARGB(255, 255, 253, 253),
                   ),
                 ),
               ),

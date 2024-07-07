@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:falldetapp/services/BLEService.dart';
 import 'package:falldetapp/services/apiService.dart';
 import 'package:falldetapp/services/notificactionService.dart';
+import 'package:falldetapp/uils/util.dart';
 import 'package:falldetapp/views/connectionScreen.dart';
+import 'package:falldetapp/views/profileScreen.dart';
 import 'package:falldetapp/views/wifiConnectionScreen.dart';
 import 'package:falldetapp/views/splashScreen.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +43,7 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'DetFall',
           theme: ThemeData(
-            primarySwatch: Colors.blueGrey,
+            primarySwatch: colorCustom,
           ),
           home: child,
         );
@@ -71,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   int _signalCount = 0;
   Timer? _timer;
   bool _isAlertSent = false;
+  bool _isYesButtonDisabled = false;
 
   @override
   void initState() {
@@ -100,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: Color.fromARGB(255, 225, 228, 229),
+          backgroundColor: Color.fromARGB(255, 25, 40, 76),
           elevation: 0,
           toolbarHeight: 80,
           centerTitle: false,
@@ -114,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: Color.fromRGBO(255, 255, 255, 1),
                   ),
                 ),
               ),
@@ -123,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 './assets/images/alert_icon.png',
                 height: 60,
                 width: 80,
-              ),
+              ),            
             ],
           )),
       body: IndexedStack(
@@ -191,6 +194,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               }
             },
           ),
+          ProfileScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -210,7 +214,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             label: 'Perfil',
           ),
         ],
-        selectedItemColor: Color.fromARGB(255, 68, 170, 153),
+        selectedItemColor: Color.fromARGB(255, 39, 58, 129),
       ),
     );
   }
@@ -259,15 +263,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       }
     });
   }
+
   Future<void> _sendImmediateAlert() async {
-  print("ENVIANDO ALERTA...");
-  bool apiCallSuccess = await apiService.apiPrueba();
-  if (apiCallSuccess) {
-    notificacionCaida();
-  } else {
-    print('Fallo al enviar la alerta a la API.');
+    print("ENVIANDO ALERTA...");
+    bool apiCallSuccess = await apiService.apiPrueba();
+    if (apiCallSuccess) {
+      notificacionCaida();
+    } else {
+      print('Fallo al enviar la alerta a la API.');
+    }
   }
-}
 
   void _showFallDetectedDialog() {
     showDialog(
@@ -306,17 +311,27 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 primary:
-                    const Color.fromARGB(255, 207, 61, 61), // Color de fondo del botón rojo oscuro
+                    Colors.red[800], // Color de fondo del botón rojo oscuro
                 onPrimary: Colors.white, // Color del texto del botón blanco
               ),
-              onPressed: () async {
-                // Usuario presionó SÍ, enviar la alerta de inmediato
-                _isAlertSent =
-                    false; // Cancelar el temporizador si está corriendo
-                _timer?.cancel(); // Cancelar el temporizador si está corriendo
-                await _sendImmediateAlert();
-                Navigator.of(context).pop();
-              },
+              onPressed: _isYesButtonDisabled
+                  ? null
+                  : () async {
+                      setState(() {
+                        _isYesButtonDisabled = true; // Deshabilitar el botón
+                      });
+                      // Usuario presionó SÍ, enviar la alerta de inmediato
+                      _isAlertSent =
+                          false; // Cancelar el temporizador si está corriendo
+                      _timer
+                          ?.cancel(); // Cancelar el temporizador si está corriendo
+                      await _sendImmediateAlert();
+                      Navigator.of(context).pop();
+                      setState(() {
+                        _isYesButtonDisabled =
+                            false; // Rehabilitar el botón después de la operación
+                      });
+                    },
               child: Text('SÍ'),
             ),
           ],
@@ -325,5 +340,3 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 }
-
-
