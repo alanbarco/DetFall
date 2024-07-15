@@ -7,14 +7,17 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:timer_count_down/timer_count_down.dart';
 
 class ConnectionView extends StatefulWidget {
   final BLEService bleService;
   final void Function(List<BluetoothDevice>) onDevicesConnected;
   final List<BluetoothDevice>? connectedDevices;
+  final ValueNotifier<bool> isLoading;
 
   const ConnectionView({
     required this.bleService,
+    required this.isLoading,
     required this.onDevicesConnected,
     required this.connectedDevices,
   });
@@ -60,7 +63,8 @@ class _ConnectionViewState extends State<ConnectionView> {
       }
     }
     widget.onDevicesConnected(connectedDevices);
-    await Future.delayed(Duration(seconds: 10));
+
+    await Future.delayed(Duration(seconds: 90));
     setState(() {
       _isButtonEnabled = true;
       _isLoading = false;
@@ -82,7 +86,6 @@ class _ConnectionViewState extends State<ConnectionView> {
     ];
     final sachaUuid = '143c87e6-058a-43e7-9d75-fbbea5c3c157';
     final caidaUuid = '19b10000-e8f2-537e-4f6c-d104768a1214';
-
     // List<BluetoothDevice> filteredDevices = [];
     return StreamBuilder<List<ScanResult>>(
       stream: widget.bleService.flutterBlue.scanResults,
@@ -115,111 +118,112 @@ class _ConnectionViewState extends State<ConnectionView> {
               widget.connectedDevices!.any((device) {
             return device.name.contains("Sacha");
           });
-          if (_isLoading) {
-            // Mostrar el circulito de carga mientras está cargando
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize
-                    .min, // Asegura que la columna ocupe solo el espacio necesario
-                mainAxisAlignment: MainAxisAlignment
-                    .center, // Centra los widgets verticalmente
-                children: [
-                  CircularProgressIndicator(
-                    strokeWidth: 5.0, // Grosor del circulito
+          return ValueListenableBuilder<bool>(
+            valueListenable: widget.isLoading,
+            builder: (context, isLoading, child) {
+              if (_isLoading) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        strokeWidth: 5.0,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Enlazando detector',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(
-                      height:
-                          16), // Espacio entre el indicador de progreso y el texto
-                  Text(
-                    'Enlazando detector',
-                    style: TextStyle(
-                      fontSize: 18, // Tamaño del texto
-                      fontWeight: FontWeight.bold, // Negrita
-                    ),
-                  ),
-                ],
-              ),
-            );
-          } else {
-            return Center(
-              child: Container(
-                height: 400,
-                width: 400,
-                child: Card(
-                    color: Color.fromARGB(255, 251, 254, 255),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/images/check.svg',
-                            height: 100,
-                            width: 100,
-                          ),
-                          ListTile(
-                            title: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '¡Enlace exitoso!',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                      height: 8), // Espacio entre los textos
-                                  Text(
-                                    'El detector está configurado para: ',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    hasVoiceDetectorConnected ? 'Voz' : '',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                      height: 8), // Espacio entre los textos
-                                  Text(
-                                    // hasFallDetectorConnected ? 'Movimientos' : '',
-                                    'Movimientos',
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                ],
+                );
+              } else {
+                return Center(
+                  child: Container(
+                    height: 400,
+                    width: 400,
+                    child: Card(
+                        color: Color.fromARGB(255, 251, 254, 255),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/images/check.svg',
+                                height: 100,
+                                width: 100,
                               ),
-                            ),
-                          ),
-
-                          // Image.asset('assets/images/alert_icon.png', height: 150),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              primary: Color.fromARGB(221, 20, 70, 124),
-                              onPrimary: Colors.white,
-                              fixedSize: const Size(200, 50),
-                            ),
-                            onPressed: () async {
-                              for (var device in widget.connectedDevices!) {
-                                await widget.bleService.disconnect(device);
-                                widget.onDevicesConnected([]);
-                              }
-                            },
-                            child: const Text('Desconectar'),
-                          ),
-                        ])),
-              ),
-            );
-          }
+                              ListTile(
+                                title: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '¡Enlace exitoso!',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                          height:
+                                              8), // Espacio entre los textos
+                                      Text(
+                                        'El detector está configurado para: ',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        hasVoiceDetectorConnected ? 'Voz' : '',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                          height:
+                                              8), // Espacio entre los textos
+                                      Text(
+                                        hasFallDetectorConnected
+                                            ? 'Movimientos'
+                                            : '',
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  primary: Color.fromARGB(221, 20, 70, 124),
+                                  onPrimary: Colors.white,
+                                  fixedSize: const Size(200, 50),
+                                ),
+                                onPressed: () async {
+                                  for (var device in widget.connectedDevices!) {
+                                    await widget.bleService.disconnect(device);
+                                    widget.onDevicesConnected([]);
+                                  }
+                                },
+                                child: const Text('Desconectar'),
+                              ),
+                            ])),
+                  ),
+                );
+              }
+            },
+          );
         } else if (filteredDevices.isEmpty) {
           return Column(
             children: [
@@ -253,7 +257,7 @@ class _ConnectionViewState extends State<ConnectionView> {
             ListTile(
               leading: Icon(
                 Icons.check_circle,
-                color:  Colors.green,
+                color: Colors.green,
               ),
               title: Text('Movimientos'),
             ),
@@ -277,7 +281,6 @@ class _ConnectionViewState extends State<ConnectionView> {
                       style: const TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold),
                     )),
-                    //subtitle: Text(device.id.toString()),
                     onTap: _isButtonEnabled ? connectToDevices : null,
                   ),
                 ))
@@ -285,25 +288,5 @@ class _ConnectionViewState extends State<ConnectionView> {
         }
       },
     );
-  }
-}
-
-Future<bool> apiPrueba() async {
-  try {
-    final response = await http.post(
-        Uri.parse("http://192.168.100.60:8000/alerta"),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(
-            <String, String>{"mensaje": "prueba", "location": "prueba"}));
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (e) {
-    print('Error al enviar alerta a API externa: $e');
-    return false;
   }
 }

@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:timer_count_down/timer_count_down.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,8 +74,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   int _signalCount = 0;
   Timer? _timer;
   bool _isAlertSent = false;
-  bool _isYesButtonDisabled = false;
-
+  ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
   @override
   void initState() {
     super.initState();
@@ -139,24 +139,23 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               setState(() {
                 _connectedDevices = devices;
               });
-
               for (var device in devices) {
                 if (device != null) {
                   try {
-                    // Verifica si el dispositivo está conectado
                     BluetoothDeviceState state = await device.state.first;
                     if (state == BluetoothDeviceState.connected) {
-                      // Si está conectado, descubre servicios
                       List<BluetoothService> services =
                           await device.discoverServices();
                       for (var service in services) {
                         if (serviciosBLE.contains(service.uuid.toString())) {
+                           _isLoading.value = true;
                           var characteristics = service.characteristics;
                           for (BluetoothCharacteristic c in characteristics) {
                             if (serviciosBLE.contains(c.uuid.toString())) {
                               _listenToCharacteristic(c);
                             }
                           }
+                            _isLoading.value = false;
                         }
                       }
                     } else {
@@ -193,6 +192,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 }
               }
             },
+             isLoading: _isLoading,
           ),
           ProfileScreen(),
         ],
@@ -224,20 +224,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     c.value.listen((value) {
       if (value.isNotEmpty && value[0] == 1) {
         _timer?.cancel();
-
         if (_isAlertSent) {
           _isAlertSent = false;
         } else {
           _signalCount++;
         }
-
         _timer = Timer(Duration(seconds: 15), () {
           setState(() {
             _signalCount = 0;
           });
         });
 
-        if (_signalCount == 1) {
+        if (_signalCount>0) {
           _sendAlert();
           _isAlertSent = true;
           _signalCount = 0;
@@ -264,78 +262,48 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _sendImmediateAlert() async {
-    print("ENVIANDO ALERTA...");
-    bool apiCallSuccess = await apiService.apiPrueba();
-    if (apiCallSuccess) {
-      notificacionCaida();
-    } else {
-      print('Fallo al enviar la alerta a la API.');
-    }
-  }
-
   void _showFallDetectedDialog() {
     showDialog(
       context: context,
       barrierDismissible:
-          false, // Prevents closing the dialog by tapping outside
+          false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor:
-              Color.fromARGB(255, 239, 22, 22), // Color de fondo azul oscuro
-          title: Text(
-            'Alerta',
-            style: TextStyle(color: Colors.white), // Texto blanco
-          ),
-          content: Text(
-            'Se detectó una señal de emergencia, ¿es correcto?',
-            style: TextStyle(color: Colors.white), // Texto blanco
-          ),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: Color.fromARGB(
-                    255, 239, 22, 22), // Color de fondo del botón azul oscuro
-                onPrimary: Colors.white, // Color del texto del botón blanco
+         return AlertDialog(
+            backgroundColor: Color.fromARGB(255, 246, 246, 246),
+            title: Text(
+              'ALERTA DE EMERGENCIA',
+              style: TextStyle(
+                  color: const Color.fromARGB(255, 237, 0, 0),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20),
+            ),
+            content: Countdown(
+              seconds: 60,
+              build: (BuildContext context, double time) => Text(
+                'Se detectó una señal de emergencia, descartar en ${time.toInt()} segundos si no es correcto.',
+                style: TextStyle(
+                    color: Color.fromARGB(255, 19, 43, 146),
+                    fontWeight: FontWeight.bold),
               ),
-              onPressed: () async {
-                // User pressed NO, cancel the alert and reset the state
-                _isAlertSent = false;
-                _signalCount = 0;
-                _timer?.cancel();
-                await flutterLocalNotificationsPlugin.cancel(0);
-                Navigator.of(context).pop();
+              interval: Duration(milliseconds: 1000),
+              onFinished: () {
+                print('Timer is done!');
               },
-              child: Text('NO'),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary:
-                    Colors.red[800], // Color de fondo del botón rojo oscuro
-                onPrimary: Colors.white, // Color del texto del botón blanco
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Color.fromARGB(255, 239, 22, 22),
+                  onPrimary: Colors.white,
+                ),
+                onPressed: () async {
+                  await flutterLocalNotificationsPlugin.cancel(0);
+                  Navigator.of(context).pop();
+                },
+                child: Text('DESCARTAR'),
               ),
-              onPressed: _isYesButtonDisabled
-                  ? null
-                  : () async {
-                      setState(() {
-                        _isYesButtonDisabled = true; // Deshabilitar el botón
-                      });
-                      // Usuario presionó SÍ, enviar la alerta de inmediato
-                      _isAlertSent =
-                          false; // Cancelar el temporizador si está corriendo
-                      _timer
-                          ?.cancel(); // Cancelar el temporizador si está corriendo
-                      await _sendImmediateAlert();
-                      Navigator.of(context).pop();
-                      setState(() {
-                        _isYesButtonDisabled =
-                            false; // Rehabilitar el botón después de la operación
-                      });
-                    },
-              child: Text('SÍ'),
-            ),
-          ],
-        );
+            ],
+          );
       },
     );
   }
