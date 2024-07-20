@@ -202,7 +202,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                                       Text(
                                         hasVoiceDetectorConnected ? 'Voz' : '',
                                         style: const TextStyle(
-                                          fontSize: 20,
+                                          fontSize: 22,
                                           fontWeight: FontWeight.normal,
                                         ),
                                       ),

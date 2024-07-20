@@ -70,13 +70,25 @@ class BLEService {
   }
 
   Future<void> connect(blue.BluetoothDevice device) async {
+  // Obtener el estado actual del dispositivo
+  var currentState = await device.state.first;
+
+  // Verificar si el dispositivo ya está conectado
+  if (currentState != blue.BluetoothDeviceState.connected) {
+    // Conectar solo si el dispositivo no está ya conectado
     await device.connect();
-    device.state.listen((state) {
-      if (state == blue.BluetoothDeviceState.disconnected) {
-        _deviceDisconnectedController.add(device);
-      }
-    });
+  } else {
+    print("El dispositivo ya está conectado");
   }
+
+  // Escuchar el estado del dispositivo para manejar desconexiones
+  device.state.listen((state) {
+    if (state == blue.BluetoothDeviceState.disconnected) {
+      _deviceDisconnectedController.add(device);
+    }
+  });
+}
+
 
   Future<void> disconnect(blue.BluetoothDevice device) async {
     await device.disconnect();

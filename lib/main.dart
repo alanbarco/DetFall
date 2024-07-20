@@ -22,12 +22,9 @@ Future<void> main() async {
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
   Get.put(InternetController(), permanent: true);
-  runApp(
-    MultiProvider(providers: [
-      ChangeNotifierProvider(create: (context) => DevicesProvider())
-    ],
-    child: MyApp())
-  );
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => DevicesProvider())
+  ], child: MyApp()));
 }
 
 class MyHttpOverrides extends HttpOverrides {
@@ -103,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         _showFallDetectedDialog();
       }
       segundoPlano = false;
-    }else if(state == AppLifecycleState.paused){
+    } else if (state == AppLifecycleState.inactive) {
       segundoPlano = true;
     }
   }
@@ -136,7 +133,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 './assets/images/alert_icon.png',
                 height: 60,
                 width: 80,
-              ),            
+              ),
             ],
           )),
       body: IndexedStack(
@@ -159,14 +156,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                           await device.discoverServices();
                       for (var service in services) {
                         if (serviciosBLE.contains(service.uuid.toString())) {
-                           _isLoading.value = true;
+                          _isLoading.value = true;
                           var characteristics = service.characteristics;
                           for (BluetoothCharacteristic c in characteristics) {
                             if (serviciosBLE.contains(c.uuid.toString())) {
                               _listenToCharacteristic(c);
                             }
                           }
-                            _isLoading.value = false;
+                          _isLoading.value = false;
                         }
                       }
                     } else {
@@ -203,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 }
               }
             },
-             isLoading: _isLoading,
+            isLoading: _isLoading,
           ),
           ProfileScreen(),
         ],
@@ -233,23 +230,32 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void _listenToCharacteristic(BluetoothCharacteristic c) {
     c.setNotifyValue(true);
     c.value.listen((value) {
-      if (value.isNotEmpty && value[0] == 1) {
-        _timer?.cancel();
-        if (_isAlertSent) {
-          _isAlertSent = false;
-        } else {
-          _signalCount++;
-        }
-        _timer = Timer(Duration(seconds: 15), () {
-          setState(() {
-            _signalCount = 0;
-          });
-        });
+      if (value.isNotEmpty) {
+        // Convertir la lista de enteros a String
+        String stringValue = String.fromCharCodes(value);
 
-        if (_signalCount>0) {
-          _sendAlert();
-          _isAlertSent = true;
-          _signalCount = 0;
+        // Comprobar el primer carácter y almacenar el resto de la cadena
+        if (stringValue[0] == '1') {
+          String data = stringValue.substring(2); // Almacena "0001" en data
+
+          _timer?.cancel();
+          if (_isAlertSent) {
+            _isAlertSent = false;
+          } else {
+            _signalCount++;
+          }
+
+          _timer = Timer(Duration(seconds: 15), () {
+            setState(() {
+              _signalCount = 0;
+            });
+          });
+
+          if (_signalCount > 0) {
+            _sendAlert();
+            _isAlertSent = true;
+            _signalCount = 0;
+          }
         }
       }
     });
@@ -276,45 +282,44 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void _showFallDetectedDialog() {
     showDialog(
       context: context,
-      barrierDismissible:
-          false,
+      barrierDismissible: false,
       builder: (BuildContext context) {
-         return AlertDialog(
-            backgroundColor: Color.fromARGB(255, 246, 246, 246),
-            title: Text(
-              'ALERTA DE EMERGENCIA',
+        return AlertDialog(
+          backgroundColor: Color.fromARGB(255, 246, 246, 246),
+          title: Text(
+            'ALERTA DE EMERGENCIA',
+            style: TextStyle(
+                color: const Color.fromARGB(255, 237, 0, 0),
+                fontWeight: FontWeight.bold,
+                fontSize: 20),
+          ),
+          content: Countdown(
+            seconds: 60,
+            build: (BuildContext context, double time) => Text(
+              'Se detectó una señal de emergencia, descartar en ${time.toInt()} segundos si no es correcto.',
               style: TextStyle(
-                  color: const Color.fromARGB(255, 237, 0, 0),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20),
+                  color: Color.fromARGB(255, 19, 43, 146),
+                  fontWeight: FontWeight.bold),
             ),
-            content: Countdown(
-              seconds: 60,
-              build: (BuildContext context, double time) => Text(
-                'Se detectó una señal de emergencia, descartar en ${time.toInt()} segundos si no es correcto.',
-                style: TextStyle(
-                    color: Color.fromARGB(255, 19, 43, 146),
-                    fontWeight: FontWeight.bold),
+            interval: Duration(milliseconds: 1000),
+            onFinished: () {
+              print('Timer is done!');
+            },
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Color.fromARGB(255, 239, 22, 22),
+                onPrimary: Colors.white,
               ),
-              interval: Duration(milliseconds: 1000),
-              onFinished: () {
-                print('Timer is done!');
+              onPressed: () async {
+                await flutterLocalNotificationsPlugin.cancel(0);
+                Navigator.of(context).pop();
               },
+              child: Text('DESCARTAR'),
             ),
-            actions: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Color.fromARGB(255, 239, 22, 22),
-                  onPrimary: Colors.white,
-                ),
-                onPressed: () async {
-                  await flutterLocalNotificationsPlugin.cancel(0);
-                  Navigator.of(context).pop();
-                },
-                child: Text('DESCARTAR'),
-              ),
-            ],
-          );
+          ],
+        );
       },
     );
   }
