@@ -48,6 +48,7 @@ dependencies:
   location:
   timer_count_down: ^2.2.0
   flutter_screenutil: ^5.0.0+2
+  device_info_plus:
 
 
 dev_dependencies:

@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:falldetapp/providers/devicesProvider.dart';
 import 'package:falldetapp/services/BLEService.dart';
 import 'package:falldetapp/services/apiService.dart';
 import 'package:falldetapp/services/notificactionService.dart';
-import 'package:falldetapp/uils/util.dart';
+import 'package:falldetapp/utils/util.dart';
 import 'package:falldetapp/views/connectionScreen.dart';
 import 'package:falldetapp/views/profileScreen.dart';
 import 'package:falldetapp/views/wifiConnectionScreen.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:timer_count_down/timer_count_down.dart';
 
 Future<void> main() async {
@@ -20,7 +22,12 @@ Future<void> main() async {
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
   Get.put(InternetController(), permanent: true);
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(providers: [
+      ChangeNotifierProvider(create: (context) => DevicesProvider())
+    ],
+    child: MyApp())
+  );
 }
 
 class MyHttpOverrides extends HttpOverrides {
@@ -74,11 +81,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   int _signalCount = 0;
   Timer? _timer;
   bool _isAlertSent = false;
+  bool segundoPlano = false;
   ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
   @override
   void initState() {
     super.initState();
-    // Escucha eventos cuando la app está en foreground
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -91,16 +98,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Mostrar diálogo cuando la aplicación vuelve al primer plano
+    if (state == AppLifecycleState.resumed && segundoPlano) {
       if (_isAlertSent) {
         _showFallDetectedDialog();
       }
+      segundoPlano = false;
+    }else if(state == AppLifecycleState.paused){
+      segundoPlano = true;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    var devicesProvider = Provider.of<DevicesProvider>(context);
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Color.fromARGB(255, 25, 40, 76),
@@ -140,6 +150,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 _connectedDevices = devices;
               });
               for (var device in devices) {
+                devicesProvider.add(device);
                 if (device != null) {
                   try {
                     BluetoothDeviceState state = await device.state.first;

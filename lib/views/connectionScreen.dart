@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:falldetapp/providers/devicesProvider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:falldetapp/services/BLEService.dart';
 import 'package:falldetapp/services/notificactionService.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:timer_count_down/timer_count_down.dart';
 
 class ConnectionView extends StatefulWidget {
@@ -28,14 +30,21 @@ class ConnectionView extends StatefulWidget {
 
 class _ConnectionViewState extends State<ConnectionView> {
   StreamSubscription? _scanSubscription;
-  bool _isLoading = true; // Estado de carga
+  late StreamSubscription<BluetoothDevice>? _disconnectSubscription;
+  bool _isLoading = true;
+  Map<String, bool> _connectionStatus = {};
   List<BluetoothDevice> filteredDevices = [];
   List<BluetoothDevice> connectedDevices = [];
   bool _isButtonEnabled = true;
+  bool hasFallDetectorConnected = false;
+  bool hasVoiceDetectorConnected = false;
+  var devicesProvider;
+  
 
   @override
   void initState() {
     super.initState();
+    devicesProvider = Provider.of<DevicesProvider>(context, listen: false);    
     startScanning();
   }
 
@@ -47,6 +56,17 @@ class _ConnectionViewState extends State<ConnectionView> {
         widget.bleService.startScanning();
       }
     });
+    subscriptionDevices();
+  }
+
+  void subscriptionDevices() {
+    _disconnectSubscription = widget.bleService.deviceDisconnectedStream?.listen((device) {
+      setState(() {
+        connectedDevices.remove(device);
+        devicesProvider.remove(device);
+        widget.onDevicesConnected(connectedDevices);
+      });
+    });
   }
 
   void connectToDevices() async {
@@ -57,6 +77,7 @@ class _ConnectionViewState extends State<ConnectionView> {
     for (var device in filteredDevices) {
       if (!connectedDevices.contains(device)) {
         await widget.bleService.connect(device);
+        devicesProvider.add(device);
         setState(() {
           connectedDevices.add(device);
         });
@@ -64,7 +85,7 @@ class _ConnectionViewState extends State<ConnectionView> {
     }
     widget.onDevicesConnected(connectedDevices);
 
-    await Future.delayed(Duration(seconds: 90));
+    await Future.delayed(Duration(seconds: 60));
     setState(() {
       _isButtonEnabled = true;
       _isLoading = false;
@@ -75,6 +96,7 @@ class _ConnectionViewState extends State<ConnectionView> {
   void dispose() {
     widget.bleService.stopScanning();
     _scanSubscription?.cancel();
+    _disconnectSubscription?.cancel();
     super.dispose();
   }
 
@@ -86,21 +108,17 @@ class _ConnectionViewState extends State<ConnectionView> {
     ];
     final sachaUuid = '143c87e6-058a-43e7-9d75-fbbea5c3c157';
     final caidaUuid = '19b10000-e8f2-537e-4f6c-d104768a1214';
-    // List<BluetoothDevice> filteredDevices = [];
+    final devicesProviderWatch = context.watch<DevicesProvider>().devices;
+    bool allDevicesConnected =
+        _connectionStatus.values.every((isConnected) => isConnected);
+    bool noDevicesConnected =
+        _connectionStatus.values.every((isConnected) => !isConnected);
+
     return StreamBuilder<List<ScanResult>>(
       stream: widget.bleService.flutterBlue.scanResults,
       initialData: [],
       builder: (context, snapshot) {
         final scanResults = snapshot.data!;
-        // filteredDevices = scanResults
-        //                   .where((scanResult) => scanResult.advertisementData.serviceUuids.contains(serviceUuid))
-        //                   .map((scanResult) => scanResult.device)
-        //                   .toList();
-        // filteredDevices = scanResults
-        //     .where((scanResult) => serviceUuids.any((uuid) =>
-        //         scanResult.advertisementData.serviceUuids.contains(uuid)))
-        //     .map((scanResult) => scanResult.device)
-        //     .toList();
         filteredDevices = scanResults.map((result) => result.device).toList();
 
         bool hasFallDetector = filteredDevices.any((device) {
@@ -109,13 +127,13 @@ class _ConnectionViewState extends State<ConnectionView> {
         bool hasVoiceDetector = filteredDevices.any((device) {
           return device.name.contains("Sacha");
         });
-        if (widget.connectedDevices!.isNotEmpty) {
-          bool hasFallDetectorConnected =
-              widget.connectedDevices!.any((device) {
+        if (devicesProviderWatch.isNotEmpty) {
+           hasFallDetectorConnected =
+              devicesProviderWatch.any((device) {
             return device.name.contains("DetFall");
           });
           bool hasVoiceDetectorConnected =
-              widget.connectedDevices!.any((device) {
+              devicesProviderWatch.any((device) {
             return device.name.contains("Sacha");
           });
           return ValueListenableBuilder<bool>(
