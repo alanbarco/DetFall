@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:falldetapp/providers/buttonProvider.dart';
 import 'package:falldetapp/providers/devicesProvider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:falldetapp/services/BLEService.dart';
@@ -35,16 +36,17 @@ class _ConnectionViewState extends State<ConnectionView> {
   Map<String, bool> _connectionStatus = {};
   List<BluetoothDevice> filteredDevices = [];
   List<BluetoothDevice> connectedDevices = [];
-  bool _isButtonEnabled = true;
   bool hasFallDetectorConnected = false;
   bool hasVoiceDetectorConnected = false;
   var devicesProvider;
+  var buttonProvider;
   
 
   @override
   void initState() {
     super.initState();
     devicesProvider = Provider.of<DevicesProvider>(context, listen: false);    
+    buttonProvider = Provider.of<ButtonProvider>(context, listen: false);    
     startScanning();
   }
 
@@ -64,6 +66,9 @@ class _ConnectionViewState extends State<ConnectionView> {
       setState(() {
         connectedDevices.remove(device);
         devicesProvider.remove(device);
+        if(devicesProvider.devices.isEmpty){
+          buttonProvider.changeStatus(true);
+        }
         widget.onDevicesConnected(connectedDevices);
       });
     });
@@ -71,7 +76,7 @@ class _ConnectionViewState extends State<ConnectionView> {
 
   void connectToDevices() async {
     setState(() {
-      _isButtonEnabled = false;
+      buttonProvider.changeStatus(false);
       _isLoading = true;
     });
     for (var device in filteredDevices) {
@@ -87,7 +92,7 @@ class _ConnectionViewState extends State<ConnectionView> {
 
     await Future.delayed(Duration(seconds: 60));
     setState(() {
-      _isButtonEnabled = true;
+      buttonProvider.changeStatus(true);
       _isLoading = false;
     });
   }
@@ -109,6 +114,7 @@ class _ConnectionViewState extends State<ConnectionView> {
     final sachaUuid = '143c87e6-058a-43e7-9d75-fbbea5c3c157';
     final caidaUuid = '19b10000-e8f2-537e-4f6c-d104768a1214';
     final devicesProviderWatch = context.watch<DevicesProvider>().devices;
+    final buttonProviderWatch = context.watch<ButtonProvider>();
     bool allDevicesConnected =
         _connectionStatus.values.every((isConnected) => isConnected);
     bool noDevicesConnected =
@@ -299,7 +305,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                       style: const TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold),
                     )),
-                    onTap: _isButtonEnabled ? connectToDevices : null,
+                    onTap: buttonProviderWatch.activo ? connectToDevices : null,
                   ),
                 ))
           ]);

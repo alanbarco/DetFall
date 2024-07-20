@@ -28,7 +28,7 @@ Future<void> notificacionCaida() async{
   const NotificationDetails notificationDetails = NotificationDetails(android: andoirdNotificationDetails);
 
   await flutterLocalNotificationsPlugin
-  .show(1, 'CAIDA DETECTADA', 'Alerta enviada!', notificationDetails);
+  .show(1, 'ALERTA DETECTADA', 'Alerta enviada!', notificationDetails);
 }
 
 Future<void> showNotificationWithSound() async {

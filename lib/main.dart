@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:falldetapp/providers/buttonProvider.dart';
 import 'package:falldetapp/providers/devicesProvider.dart';
 import 'package:falldetapp/services/BLEService.dart';
 import 'package:falldetapp/services/apiService.dart';
@@ -22,9 +23,13 @@ Future<void> main() async {
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
   Get.put(InternetController(), permanent: true);
-  runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (context) => DevicesProvider())
-  ], child: MyApp()));
+  runApp(
+    MultiProvider(providers: [
+      ChangeNotifierProvider(create: (context) => DevicesProvider()),
+      ChangeNotifierProvider(create: (context)=> ButtonProvider())
+    ],
+    child: MyApp())
+  );
 }
 
 class MyHttpOverrides extends HttpOverrides {
@@ -96,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && segundoPlano) {
-      if (_isAlertSent) {
+      if (!_isAlertSent) {
         _showFallDetectedDialog();
       }
       segundoPlano = false;
