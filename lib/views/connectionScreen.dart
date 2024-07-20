@@ -273,9 +273,9 @@ class _ConnectionViewState extends State<ConnectionView> {
               ),
             ),
             ListTile(
-              leading: Icon(
-                Icons.check_circle,
-                color: Colors.green,
+               leading: Icon(
+                hasFallDetector ? Icons.check_circle : Icons.cancel,
+                color: hasFallDetector ? Colors.green : Colors.red,
               ),
               title: Text('Movimientos'),
             ),
