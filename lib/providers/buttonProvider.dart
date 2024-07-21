@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ButtonProvider extends ChangeNotifier{
-  bool _activo = false;
+  bool _activo = true;
 
   bool get activo => _activo;
 

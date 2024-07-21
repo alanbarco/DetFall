@@ -23,13 +23,10 @@ Future<void> main() async {
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
   Get.put(InternetController(), permanent: true);
-  runApp(
-    MultiProvider(providers: [
-      ChangeNotifierProvider(create: (context) => DevicesProvider()),
-      ChangeNotifierProvider(create: (context)=> ButtonProvider())
-    ],
-    child: MyApp())
-  );
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => DevicesProvider()),
+    ChangeNotifierProvider(create: (context) => ButtonProvider())
+  ], child: MyApp()));
 }
 
 class MyHttpOverrides extends HttpOverrides {
@@ -84,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Timer? _timer;
   bool _isAlertSent = false;
   bool segundoPlano = false;
+  bool _isDialogShowing = false;
   ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
   @override
   void initState() {
@@ -101,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && segundoPlano) {
-      if (!_isAlertSent) {
+      if (!_isAlertSent && !_isDialogShowing) {
         _showFallDetectedDialog();
       }
       segundoPlano = false;
@@ -269,7 +267,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Future<void> _sendAlert() async {
     _isAlertSent = true;
     await showNotificationWithSound();
-    _showFallDetectedDialog();
+    if (!_isDialogShowing) {
+      _showFallDetectedDialog();
+    }
     _timer = Timer(Duration(minutes: 1), () async {
       if (_isAlertSent) {
         print("ENVIANDO ALERTA...");
@@ -285,6 +285,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _showFallDetectedDialog() {
+    setState(() {
+      _isDialogShowing = true;
+    });
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -319,13 +322,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               ),
               onPressed: () async {
                 await flutterLocalNotificationsPlugin.cancel(0);
+                setState(() {
+                  _isDialogShowing = false;
+                });
                 Navigator.of(context).pop();
               },
               child: Text('DESCARTAR'),
             ),
           ],
         );
-      },
+      }
     );
   }
 }
