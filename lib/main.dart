@@ -82,11 +82,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool _isAlertSent = false;
   bool segundoPlano = false;
   bool _isDialogShowing = false;
+  var buttonProvider;
   ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    buttonProvider = Provider.of<ButtonProvider>(context);    
+    buttonProvider.changeStatus(true);
   }
 
   @override
@@ -111,6 +114,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     var devicesProvider = Provider.of<DevicesProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Color.fromARGB(255, 25, 40, 76),
