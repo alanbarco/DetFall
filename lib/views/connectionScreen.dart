@@ -33,7 +33,6 @@ class _ConnectionViewState extends State<ConnectionView> {
   StreamSubscription? _scanSubscription;
   late StreamSubscription<BluetoothDevice>? _disconnectSubscription;
   bool _isLoading = true;
-  Map<String, bool> _connectionStatus = {};
   List<BluetoothDevice> filteredDevices = [];
   List<BluetoothDevice> connectedDevices = [];
   bool hasFallDetectorConnected = false;
@@ -111,14 +110,9 @@ class _ConnectionViewState extends State<ConnectionView> {
       "143c87e6-058a-43e7-9d75-fbbea5c3c157",
       "19b10000-e8f2-537e-4f6c-d104768a1214",
     ];
-    final sachaUuid = '143c87e6-058a-43e7-9d75-fbbea5c3c157';
-    final caidaUuid = '19b10000-e8f2-537e-4f6c-d104768a1214';
+
     final devicesProviderWatch = context.watch<DevicesProvider>().devices;
     final buttonProviderWatch = context.watch<ButtonProvider>();
-    bool allDevicesConnected =
-        _connectionStatus.values.every((isConnected) => isConnected);
-    bool noDevicesConnected =
-        _connectionStatus.values.every((isConnected) => !isConnected);
 
     return StreamBuilder<List<ScanResult>>(
       stream: widget.bleService.flutterBlue.scanResults,
@@ -261,6 +255,9 @@ class _ConnectionViewState extends State<ConnectionView> {
             ],
           );
         } else {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<ButtonProvider>().changeStatus(true);
+          });
           return Column(children: [
             SizedBox(width: 40),
             SvgPicture.asset(
