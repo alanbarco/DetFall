@@ -328,6 +328,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 await flutterLocalNotificationsPlugin.cancel(0);
                 setState(() {
                   _isDialogShowing = false;
+                  _isAlertSent = false;
                 });
                 Navigator.of(context).pop();
               },
