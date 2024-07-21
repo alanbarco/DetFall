@@ -75,8 +75,8 @@ class _ConnectionViewState extends State<ConnectionView> {
   }
 
   void connectToDevices() async {
+    buttonProvider.changeStatus(false);
     setState(() {
-      buttonProvider.changeStatus(false);
       _isLoading = true;
     });
     for (var device in filteredDevices) {
@@ -90,9 +90,9 @@ class _ConnectionViewState extends State<ConnectionView> {
     }
     widget.onDevicesConnected(connectedDevices);
 
-    await Future.delayed(Duration(seconds: 60));
+    await Future.delayed(Duration(seconds: 30));
+    buttonProvider.changeStatus(true);
     setState(() {
-      buttonProvider.changeStatus(true);
       _isLoading = false;
     });
   }

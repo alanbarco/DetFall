@@ -88,8 +88,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    buttonProvider = Provider.of<ButtonProvider>(context);    
-    buttonProvider.changeStatus(true);
   }
 
   @override
@@ -102,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && segundoPlano) {
-      if (!_isAlertSent && !_isDialogShowing) {
+      if (_isAlertSent && !_isDialogShowing) {
         _showFallDetectedDialog();
       }
       segundoPlano = false;
