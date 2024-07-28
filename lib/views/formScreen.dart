@@ -48,7 +48,7 @@ class _FormScreenState extends State<FormScreen> {
               ),
               SizedBox(width: 15),
               Image.asset(
-                './assets/images/alert_icon.png',
+                './assets/images/logo.png',
                 height: 60,
                 width: 80,
               ),

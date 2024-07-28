@@ -1,16 +1,11 @@
-import 'dart:convert';
 import 'package:falldetapp/providers/buttonProvider.dart';
 import 'package:falldetapp/providers/devicesProvider.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:falldetapp/services/BLEService.dart';
-import 'package:falldetapp/services/notificactionService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:timer_count_down/timer_count_down.dart';
 
 class ConnectionView extends StatefulWidget {
   final BLEService bleService;
@@ -39,13 +34,12 @@ class _ConnectionViewState extends State<ConnectionView> {
   bool hasVoiceDetectorConnected = false;
   var devicesProvider;
   var buttonProvider;
-  
 
   @override
   void initState() {
     super.initState();
-    devicesProvider = Provider.of<DevicesProvider>(context, listen: false);    
-    buttonProvider = Provider.of<ButtonProvider>(context, listen: false);    
+    devicesProvider = Provider.of<DevicesProvider>(context, listen: false);
+    buttonProvider = Provider.of<ButtonProvider>(context, listen: false);
     startScanning();
   }
 
@@ -61,14 +55,16 @@ class _ConnectionViewState extends State<ConnectionView> {
   }
 
   void subscriptionDevices() {
-    _disconnectSubscription = widget.bleService.deviceDisconnectedStream?.listen((device) {
+    _disconnectSubscription =
+        widget.bleService.deviceDisconnectedStream?.listen((device) {
       setState(() {
         connectedDevices.remove(device);
         devicesProvider.remove(device);
-        if(devicesProvider.devices.isEmpty){
+        if (devicesProvider.devices.isEmpty) {
           buttonProvider.changeStatus(true);
         }
         widget.onDevicesConnected(connectedDevices);
+        device.disconnect();
       });
     });
   }
@@ -106,13 +102,8 @@ class _ConnectionViewState extends State<ConnectionView> {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> serviceUuids = [
-      "143c87e6-058a-43e7-9d75-fbbea5c3c157",
-      "19b10000-e8f2-537e-4f6c-d104768a1214",
-    ];
-
-    final devicesProviderWatch = context.watch<DevicesProvider>().devices;
-    final buttonProviderWatch = context.watch<ButtonProvider>();
+    final devicesProviderWatch = context.read<DevicesProvider>().devices;
+    final buttonProviderWatch = context.read<ButtonProvider>();
 
     return StreamBuilder<List<ScanResult>>(
       stream: widget.bleService.flutterBlue.scanResults,
@@ -128,12 +119,10 @@ class _ConnectionViewState extends State<ConnectionView> {
           return device.name.contains("Sacha");
         });
         if (devicesProviderWatch.isNotEmpty) {
-           hasFallDetectorConnected =
-              devicesProviderWatch.any((device) {
+          hasFallDetectorConnected = devicesProviderWatch.any((device) {
             return device.name.contains("DetFall");
           });
-          bool hasVoiceDetectorConnected =
-              devicesProviderWatch.any((device) {
+          bool hasVoiceDetectorConnected = devicesProviderWatch.any((device) {
             return device.name.contains("Sacha");
           });
           return ValueListenableBuilder<bool>(
@@ -159,23 +148,27 @@ class _ConnectionViewState extends State<ConnectionView> {
                     ],
                   ),
                 );
-              } else {
+              } else if (hasVoiceDetectorConnected ||
+                  hasFallDetectorConnected) {
                 return Center(
                   child: Container(
-                    height: 400,
+                    height: 500,
                     width: 400,
                     child: Card(
                         color: Color.fromARGB(255, 251, 254, 255),
                         shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: Colors.blue[900]!, // Azul marino
+                            width: 2.0, // Ancho del borde
+                          ),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              SvgPicture.asset(
-                                'assets/images/check.svg',
-                                height: 100,
-                                width: 100,
+                              Icon(
+                                Icons.sensors,
+                                size: 100,
                               ),
                               ListTile(
                                 title: Center(
@@ -191,7 +184,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                                       ),
                                       SizedBox(
                                           height:
-                                              8), // Espacio entre los textos
+                                              30), // Espacio entre los textos
                                       Text(
                                         'El detector está configurado para: ',
                                         style: const TextStyle(
@@ -199,25 +192,38 @@ class _ConnectionViewState extends State<ConnectionView> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      Text(
-                                        hasVoiceDetectorConnected ? 'Voz' : '',
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.normal,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                          height:
-                                              8), // Espacio entre los textos
-                                      Text(
-                                        hasFallDetectorConnected
-                                            ? 'Movimientos'
-                                            : '',
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.normal,
-                                        ),
-                                      ),
+                                      SizedBox(height: 20), //
+                                      hasVoiceDetectorConnected
+                                          ? ListTile(
+                                              leading: Icon(
+                                                Icons.check_circle,
+                                                color: Colors.green,
+                                              ),
+                                              title: Text(
+                                                'Voz',
+                                                style: const TextStyle(
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                              ),
+                                            )
+                                          : Container(),
+                                      SizedBox(height: 8),
+                                      hasFallDetectorConnected
+                                          ? ListTile(
+                                              leading: Icon(
+                                                Icons.check_circle,
+                                                color: Colors.green,
+                                              ),
+                                              title: Text(
+                                                'Movimientos',
+                                                style: const TextStyle(
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                              ),
+                                            )
+                                          : Container(),
                                     ],
                                   ),
                                 ),
@@ -239,6 +245,19 @@ class _ConnectionViewState extends State<ConnectionView> {
                             ])),
                   ),
                 );
+              } else {
+                return Column(
+                  children: [
+                    SizedBox(height: 160),
+                    const Center(
+                      child: Text(
+                        'Detector no encontrado',
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                );
               }
             },
           );
@@ -255,54 +274,66 @@ class _ConnectionViewState extends State<ConnectionView> {
             ],
           );
         } else {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.read<ButtonProvider>().changeStatus(true);
-          });
           return Column(children: [
-            SizedBox(width: 40),
-            SvgPicture.asset(
-              'assets/images/ble.svg',
-              height: 100,
-              width: 100,
+            SizedBox(height: 30),
+            Icon(
+              Icons.bluetooth,
+              size: 90,
+              color: Colors.blue,
             ),
+            SizedBox(height: 80),
             ListTile(
               title: Text(
                 'Sensores disponibles:',
                 style: TextStyle(
-                  fontSize: 20, // Tamaño del texto
-                  fontWeight: FontWeight
-                      .bold, // Estilo en negrita Color del texto Espaciado entre letras
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            ListTile(
-               leading: Icon(
-                hasFallDetector ? Icons.check_circle : Icons.cancel,
-                color: hasFallDetector ? Colors.green : Colors.red,
-              ),
-              title: Text('Movimientos'),
-            ),
-            ListTile(
-              leading: Icon(
-                hasVoiceDetector ? Icons.check_circle : Icons.cancel,
-                color: hasVoiceDetector ? Colors.green : Colors.red,
-              ),
-              title: Text('Voz'),
-            ),
+            SizedBox(height: 20),
+            hasFallDetector
+                ? ListTile(
+                    leading: Icon(
+                      Icons.horizontal_rule,
+                      color: Colors.black,
+                    ),
+                    title: Text('Movimientos'),
+                  )
+                : Container(),
+            SizedBox(height: 20),
+            hasVoiceDetector
+                ? ListTile(
+                    leading: Icon(
+                      Icons.horizontal_rule,
+                      color: Colors.black,
+                    ),
+                    title: Text('Voz'),
+                  )
+                : Container(),
+            SizedBox(height: 120),
             Container(
-                height: 250,
-                child: Card(
-                  margin: const EdgeInsets.all(40),
-                  color: Color.fromARGB(221, 20, 70, 124),
-                  elevation: 2,
-                  child: ListTile(
-                    title: Center(
-                        child: Text(
-                      'Presiona para enlazar el detector',
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                    )),
-                    onTap: buttonProviderWatch.activo ? connectToDevices : null,
+                height: 70,
+                width: 320,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      primary: Color.fromARGB(221, 20, 70, 124),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      textStyle: TextStyle(fontSize: 20),
+                      foregroundColor: Colors.white),
+                  onPressed:
+                      buttonProviderWatch.activo ? connectToDevices : null,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.bluetooth_connected,
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: 10),
+                      Text('Conectar detector'),
+                    ],
                   ),
                 ))
           ]);

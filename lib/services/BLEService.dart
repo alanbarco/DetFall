@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_blue/flutter_blue.dart' as blue;
+import 'package:flutter_blue/gen/flutterblue.pb.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:permission_handler/permission_handler.dart' as perm;
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ class BLEService {
   final blue.FlutterBlue _flutterBlue = blue.FlutterBlue.instance;
   bool _isRequestingPermission = false;
   blue.FlutterBlue get flutterBlue => _flutterBlue;  
+  late StreamSubscription<blue.ScanResult> _scanSubscription;
   final StreamController<blue.BluetoothDevice> _deviceDisconnectedController = StreamController<blue.BluetoothDevice>.broadcast();
   Stream<blue.BluetoothDevice>? get deviceDisconnectedStream => _deviceDisconnectedController.stream;
 

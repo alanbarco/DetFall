@@ -71,6 +71,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<BluetoothDevice> _connectedDevices = [];
   int _currentIndex = 0;
   final ApiService apiService = ApiService();
+  bool _isApiCallCompleted = false;
+  // Completer<void> _apiCallCompleter = Completer<void>();
+
   List<String> serviciosBLE = [
     "143c87e6-058a-43e7-9d75-fbbea5c3c157",
     "19b10000-e8f2-537e-4f6c-d104768a1214",
@@ -112,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     var devicesProvider = Provider.of<DevicesProvider>(context);
-    
+
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Color.fromARGB(255, 25, 40, 76),
@@ -135,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               ),
               SizedBox(width: 15),
               Image.asset(
-                './assets/images/alert_icon.png',
+                './assets/images/logo.png',
                 height: 60,
                 width: 80,
               ),
@@ -204,6 +207,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   }
                 }
               }
+              devices = [];
             },
             isLoading: _isLoading,
           ),
@@ -258,7 +262,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
           if (_signalCount > 0) {
             _sendAlert();
-            _isAlertSent = true;
+            // _isAlertSent = true;
             _signalCount = 0;
           }
         }
@@ -272,69 +276,75 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     if (!_isDialogShowing) {
       _showFallDetectedDialog();
     }
-    _timer = Timer(Duration(minutes: 1), () async {
+    Timer(Duration(minutes: 1), () async {
       if (_isAlertSent) {
         print("ENVIANDO ALERTA...");
-        bool apiCallSuccess = await apiService.apiPrueba();
-        if (apiCallSuccess) {
-          notificacionCaida();
+        if (!_isApiCallCompleted) {
+          bool apiCallSuccess = await apiService.apiPrueba();
+          if (apiCallSuccess) {
+            notificacionCaida();
+          } else {
+            print('Fallo al enviar la alerta a la API.');
+          }
+          _isAlertSent = false;
         } else {
-          print('Fallo al enviar la alerta a la API.');
+          print('Llamada a la API cancelada.');
         }
-        _isAlertSent = false;
       }
     });
   }
 
-  void _showFallDetectedDialog() {
+  void _showFallDetectedDialog() async {
     setState(() {
       _isDialogShowing = true;
     });
     showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Color.fromARGB(255, 246, 246, 246),
-          title: Text(
-            'ALERTA DE EMERGENCIA',
-            style: TextStyle(
-                color: const Color.fromARGB(255, 237, 0, 0),
-                fontWeight: FontWeight.bold,
-                fontSize: 20),
-          ),
-          content: Countdown(
-            seconds: 60,
-            build: (BuildContext context, double time) => Text(
-              'Se detectó una señal de emergencia, descartar en ${time.toInt()} segundos si no es correcto.',
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Color.fromARGB(255, 246, 246, 246),
+            title: Text(
+              'ALERTA DE EMERGENCIA',
               style: TextStyle(
-                  color: Color.fromARGB(255, 19, 43, 146),
-                  fontWeight: FontWeight.bold),
+                  color: const Color.fromARGB(255, 237, 0, 0),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20),
             ),
-            interval: Duration(milliseconds: 1000),
-            onFinished: () {
-              print('Timer is done!');
-            },
-          ),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: Color.fromARGB(255, 239, 22, 22),
-                onPrimary: Colors.white,
+            content: Countdown(
+              seconds: 60,
+              build: (BuildContext context, double time) => Text(
+                'Se detectó una señal de emergencia, descartar en ${time.toInt()} segundos si no es correcto.',
+                style: TextStyle(
+                    color: Color.fromARGB(255, 19, 43, 146),
+                    fontWeight: FontWeight.bold),
               ),
-              onPressed: () async {
-                await flutterLocalNotificationsPlugin.cancel(0);
-                setState(() {
-                  _isDialogShowing = false;
-                  _isAlertSent = false;
-                });
+              interval: Duration(milliseconds: 1000),
+              onFinished: () {
                 Navigator.of(context).pop();
+                _isDialogShowing = false;
               },
-              child: Text('DESCARTAR'),
             ),
-          ],
-        );
-      }
-    );
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Color.fromARGB(255, 239, 22, 22),
+                  onPrimary: Colors.white,
+                ),
+                onPressed: () async {
+                  _isApiCallCompleted =
+                      true; // Marcar la operación como completada
+                  await flutterLocalNotificationsPlugin.cancel(0);
+                  setState(() {
+                    _isDialogShowing = false;
+                    _isAlertSent = false;
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: Text('DESCARTAR'),
+              ),
+            ],
+          );
+        });
   }
 }
