@@ -48,7 +48,7 @@ Future<void> showNotificationWithSound() async {
   await flutterLocalNotificationsPlugin.show(
     0,
     'Se detectó una emergencia!',
-    'Confirmar si es correcto',
+    'Descartar si se encuentra bien',
     platformChannelSpecifics,
     payload: 'item x',
   );

@@ -71,7 +71,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<BluetoothDevice> _connectedDevices = [];
   int _currentIndex = 0;
   final ApiService apiService = ApiService();
-  bool _isApiCallCompleted = false;
+  // bool _isApiCallCompleted = false;
+  int countdown = 60;
   // Completer<void> _apiCallCompleter = Completer<void>();
 
   List<String> serviciosBLE = [
@@ -82,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   int _signalCount = 0;
   Timer? _timer;
-  bool _isAlertSent = false;
+  bool _isAlertSending = false;
   bool segundoPlano = false;
   bool _isDialogShowing = false;
   var buttonProvider;
@@ -103,12 +104,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && segundoPlano) {
-      if (_isAlertSent && !_isDialogShowing) {
-        _showFallDetectedDialog();
+      if (_isAlertSending && !_isDialogShowing) {
+        _showFallDetectedCard();
+      } else if(!_isAlertSending && _isDialogShowing){ 
+        Navigator.of(context).pop();
+        _isDialogShowing = false;
       }
       segundoPlano = false;
     } else if (state == AppLifecycleState.inactive) {
       segundoPlano = true;
+      
     }
   }
 
@@ -248,8 +253,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           String data = stringValue.substring(2); // Almacena "0001" en data
 
           _timer?.cancel();
-          if (_isAlertSent) {
-            _isAlertSent = false;
+          if (_isAlertSending) {
+            _isAlertSending = false;
           } else {
             _signalCount++;
           }
@@ -262,7 +267,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
           if (_signalCount > 0) {
             _sendAlert();
-            // _isAlertSent = true;
+            // _isAlertSending = true;
             _signalCount = 0;
           }
         }
@@ -271,30 +276,26 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _sendAlert() async {
-    _isAlertSent = true;
+    _isAlertSending = true;
     await showNotificationWithSound();
     if (!_isDialogShowing) {
-      _showFallDetectedDialog();
+      _showFallDetectedCard();
     }
-    Timer(Duration(minutes: 1), () async {
-      if (_isAlertSent) {
+    Timer(Duration(seconds: 85), () async {
+      if (_isAlertSending) {
         print("ENVIANDO ALERTA...");
-        if (!_isApiCallCompleted) {
           bool apiCallSuccess = await apiService.apiPrueba();
           if (apiCallSuccess) {
             notificacionCaida();
           } else {
             print('Fallo al enviar la alerta a la API.');
           }
-          _isAlertSent = false;
-        } else {
-          print('Llamada a la API cancelada.');
-        }
+          _isAlertSending = false;
       }
     });
   }
 
-  void _showFallDetectedDialog() async {
+  void _showFallDetectedCard() async {
     setState(() {
       _isDialogShowing = true;
     });
@@ -313,7 +314,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             ),
             content: Countdown(
               seconds: 60,
-              build: (BuildContext context, double time) => Text(
+              build: (context, double time) => Text(
                 'Se detectó una señal de emergencia, descartar en ${time.toInt()} segundos si no es correcto.',
                 style: TextStyle(
                     color: Color.fromARGB(255, 19, 43, 146),
@@ -332,12 +333,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   onPrimary: Colors.white,
                 ),
                 onPressed: () async {
-                  _isApiCallCompleted =
-                      true; // Marcar la operación como completada
                   await flutterLocalNotificationsPlugin.cancel(0);
                   setState(() {
                     _isDialogShowing = false;
-                    _isAlertSent = false;
+                    _isAlertSending = false;
                   });
                   Navigator.of(context).pop();
                 },
