@@ -30,6 +30,15 @@ Future<void> notificacionCaida() async{
   await flutterLocalNotificationsPlugin
   .show(1, 'ALERTA DETECTADA', 'Alerta enviada!', notificationDetails);
 }
+Future<void> notificacionCaidaError() async{
+  const AndroidNotificationDetails andoirdNotificationDetails = 
+  AndroidNotificationDetails('channelId', 'channelName', importance: Importance.high, priority: Priority.high, ticker: 'ticker');
+
+  const NotificationDetails notificationDetails = NotificationDetails(android: andoirdNotificationDetails);
+
+  await flutterLocalNotificationsPlugin
+  .show(1, 'ERROR ENVIO DE ALERTA', 'No se pudo enviar la alerta debido a un error del servidor.', notificationDetails);
+}
 
 Future<void> showNotificationWithSound() async {
   AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(

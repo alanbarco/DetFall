@@ -71,8 +71,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<BluetoothDevice> _connectedDevices = [];
   int _currentIndex = 0;
   final ApiService apiService = ApiService();
+  late Timer _timerCard;
+  int _remainingTime = 60; // Tiempo en segundos
+  late ValueNotifier<int> _countdownNotifier;
   // bool _isApiCallCompleted = false;
-  int countdown = 60;
   // Completer<void> _apiCallCompleter = Completer<void>();
 
   List<String> serviciosBLE = [
@@ -92,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _countdownNotifier = ValueNotifier<int>(_remainingTime);
   }
 
   @override
@@ -106,14 +109,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed && segundoPlano) {
       if (_isAlertSending && !_isDialogShowing) {
         _showFallDetectedCard();
-      } else if(!_isAlertSending && _isDialogShowing){ 
+      } else if (!_isAlertSending && _isDialogShowing) {
         Navigator.of(context).pop();
         _isDialogShowing = false;
       }
       segundoPlano = false;
     } else if (state == AppLifecycleState.inactive) {
       segundoPlano = true;
-      
     }
   }
 
@@ -161,57 +163,55 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               });
               for (var device in devices) {
                 devicesProvider.add(device);
-                if (device != null) {
-                  try {
-                    BluetoothDeviceState state = await device.state.first;
+                try {
+                  BluetoothDeviceState state = await device.state.first;
+                  if (state == BluetoothDeviceState.connected) {
+                    List<BluetoothService> services =
+                        await device.discoverServices();
+                    for (var service in services) {
+                      if (serviciosBLE.contains(service.uuid.toString())) {
+                        _isLoading.value = true;
+                        var characteristics = service.characteristics;
+                        for (BluetoothCharacteristic c in characteristics) {
+                          if (serviciosBLE.contains(c.uuid.toString())) {
+                            _listenToCharacteristic(c);
+                          }
+                        }
+                        _isLoading.value = false;
+                      }
+                    }
+                  } else {
+                    // Si no está conectado, conéctate primero
+                    await device.connect();
+                    // Verifica nuevamente si el dispositivo está conectado
+                    state = await device.state.first;
                     if (state == BluetoothDeviceState.connected) {
                       List<BluetoothService> services =
                           await device.discoverServices();
                       for (var service in services) {
                         if (serviciosBLE.contains(service.uuid.toString())) {
-                          _isLoading.value = true;
                           var characteristics = service.characteristics;
                           for (BluetoothCharacteristic c in characteristics) {
                             if (serviciosBLE.contains(c.uuid.toString())) {
                               _listenToCharacteristic(c);
                             }
                           }
-                          _isLoading.value = false;
                         }
                       }
                     } else {
-                      // Si no está conectado, conéctate primero
-                      await device.connect();
-                      // Verifica nuevamente si el dispositivo está conectado
-                      state = await device.state.first;
-                      if (state == BluetoothDeviceState.connected) {
-                        List<BluetoothService> services =
-                            await device.discoverServices();
-                        for (var service in services) {
-                          if (serviciosBLE.contains(service.uuid.toString())) {
-                            var characteristics = service.characteristics;
-                            for (BluetoothCharacteristic c in characteristics) {
-                              if (serviciosBLE.contains(c.uuid.toString())) {
-                                _listenToCharacteristic(c);
-                              }
-                            }
-                          }
-                        }
-                      } else {
-                        print('Error: El dispositivo no se pudo conectar.');
-                      }
+                      print('Error: El dispositivo no se pudo conectar.');
                     }
-                  } on PlatformException catch (e) {
-                    if (e.code == 'already_connected') {
-                      print('Error: El dispositivo ya está conectado.');
-                    } else {
-                      print('Error: $e');
-                    }
-                  } catch (e) {
+                  }
+                } on PlatformException catch (e) {
+                  if (e.code == 'already_connected') {
+                    print('Error: El dispositivo ya está conectado.');
+                  } else {
                     print('Error: $e');
                   }
+                } catch (e) {
+                  print('Error: $e');
                 }
-              }
+                            }
               devices = [];
             },
             isLoading: _isLoading,
@@ -280,22 +280,34 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     await showNotificationWithSound();
     if (!_isDialogShowing) {
       _showFallDetectedCard();
-    }
-    Timer(Duration(seconds: 85), () async {
-      if (_isAlertSending) {
+    }    
+  }
+
+  void _startCountdown() {
+    _timerCard = Timer.periodic(Duration(seconds: 1), (timer) {
+      _remainingTime--;
+      _countdownNotifier.value = _remainingTime;
+      if (_remainingTime <= 0) {
+        _timerCard.cancel();
+        _isAlertSending = false;
         print("ENVIANDO ALERTA...");
-          bool apiCallSuccess = await apiService.apiPrueba();
-          if (apiCallSuccess) {
-            notificacionCaida();
-          } else {
-            print('Fallo al enviar la alerta a la API.');
-          }
-          _isAlertSending = false;
+        _sendAlertToApi();
+        _remainingTime = 60;
       }
     });
   }
+  Future<void> _sendAlertToApi() async {
+    bool apiCallSuccess = await apiService.apiPrueba();
+    if (apiCallSuccess) {
+      notificacionCaida();
+    } else {
+      notificacionCaidaError();
+    }
+  }
+
 
   void _showFallDetectedCard() async {
+    _startCountdown();
     setState(() {
       _isDialogShowing = true;
     });
@@ -312,19 +324,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   fontWeight: FontWeight.bold,
                   fontSize: 20),
             ),
-            content: Countdown(
-              seconds: 60,
-              build: (context, double time) => Text(
-                'Se detectó una señal de emergencia, descartar en ${time.toInt()} segundos si no es correcto.',
+            content: ValueListenableBuilder<int>(
+            valueListenable: _countdownNotifier,
+            builder: (context, value, child) {
+              return Text(
+                'Se detectó una señal de emergencia, descartar en $value segundos si no es correcto.',
                 style: TextStyle(
                     color: Color.fromARGB(255, 19, 43, 146),
                     fontWeight: FontWeight.bold),
-              ),
-              interval: Duration(milliseconds: 1000),
-              onFinished: () {
-                Navigator.of(context).pop();
-                _isDialogShowing = false;
-              },
+              );
+            },
             ),
             actions: [
               ElevatedButton(
@@ -337,6 +346,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   setState(() {
                     _isDialogShowing = false;
                     _isAlertSending = false;
+                    _timerCard.cancel();
+                    _remainingTime = 60;
                   });
                   Navigator.of(context).pop();
                 },
