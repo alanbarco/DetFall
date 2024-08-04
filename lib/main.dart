@@ -8,7 +8,6 @@ import 'package:falldetapp/services/notificactionService.dart';
 import 'package:falldetapp/utils/util.dart';
 import 'package:falldetapp/views/connectionScreen.dart';
 import 'package:falldetapp/views/profileScreen.dart';
-import 'package:falldetapp/views/wifiConnectionScreen.dart';
 import 'package:falldetapp/views/splashScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,7 +21,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
-  Get.put(InternetController(), permanent: true);
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (context) => DevicesProvider()),
     ChangeNotifierProvider(create: (context) => ButtonProvider())
@@ -104,20 +102,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && segundoPlano) {
-      if (_isAlertSending && !_isDialogShowing) {
-        _showFallDetectedCard();
-      } else if (!_isAlertSending && _isDialogShowing) {
-        Navigator.of(context).pop();
-        _isDialogShowing = false;
-      }
-      segundoPlano = false;
-    } else if (state == AppLifecycleState.inactive) {
-      segundoPlano = true;
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed && segundoPlano) {
+  //     if (_isAlertSending && !_isDialogShowing) {
+  //       _showFallDetectedCard();
+  //     } else if (!_isAlertSending && _isDialogShowing) {
+  //       Navigator.of(context).pop();
+  //       _isDialogShowing = false;
+  //     }
+  //     segundoPlano = false;
+  //   } else if (state == AppLifecycleState.inactive) {
+  //     segundoPlano = true;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -284,13 +282,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _startCountdown() {
-    _timerCard = Timer.periodic(Duration(seconds: 1), (timer) {
+     _remainingTime = 60;
+    _timerCard = Timer.periodic(Duration(milliseconds: 1200), (timer) {
       _remainingTime--;
       _countdownNotifier.value = _remainingTime;
       if (_remainingTime <= 0) {
-        _timerCard.cancel();
-        _isAlertSending = false;
+        _timerCard.cancel();        
         print("ENVIANDO ALERTA...");
+        if(_isDialogShowing){
+          Navigator.of(context).pop();
+          _isDialogShowing = false;
+        }
         _sendAlertToApi();
         _remainingTime = 60;
       }
@@ -303,6 +305,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     } else {
       notificacionCaidaError();
     }
+    _isAlertSending = false;
   }
 
 

@@ -311,7 +311,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                     title: Text('Voz'),
                   )
                 : Container(),
-            SizedBox(height: 120),
+            SizedBox(height: 40),
             Container(
                 height: 70,
                 width: 320,
