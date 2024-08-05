@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'; 
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 Future<void> initNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_launcher_foreground');
 
   const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
 
@@ -41,24 +42,37 @@ Future<void> notificacionCaidaError() async{
 }
 
 Future<void> showNotificationWithSound() async {
-  AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'Detección de emergencia', 'Se detectó una señal de emergencia, está bien?',
-    importance: Importance.max,
-    priority: Priority.high,
-    sound: RawResourceAndroidNotificationSound('notification'),
-    playSound: true,
-    enableVibration: true,
-    vibrationPattern: Int64List.fromList([0, 4000]),
-  );
-  NotificationDetails platformChannelSpecifics = NotificationDetails(
-    android: androidPlatformChannelSpecifics,
-  );
+    const platform = MethodChannel('com.example.falldetapp/notification');
+    try {
+      await platform.invokeMethod('showNotification', {
+        'title': 'Se detectó una emergencia!',
+        'message': 'Descartar si se encuentra bien',
+      });
+    } on PlatformException catch (e) {
+      print("Failed to show notification: '${e.message}'.");
+    }
+  }
 
-  await flutterLocalNotificationsPlugin.show(
-    0,
-    'Se detectó una emergencia!',
-    'Descartar si se encuentra bien',
-    platformChannelSpecifics,
-    payload: 'item x',
-  );
-}
+// Future<void> showNotificationWithSound() async {
+//   AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+//     'Detección de emergencia', 'Se detectó una señal de emergencia ¿Estás bien?',
+//     importance: Importance.max,
+//     priority: Priority.high,
+//     sound: RawResourceAndroidNotificationSound('notification'),
+//     playSound: true,
+//     enableVibration: true,
+//     vibrationPattern: Int64List.fromList([0, 4000]),
+//     audioAttributesUsage: AudioAttributesUsage.alarm,
+//   );
+//   NotificationDetails platformChannelSpecifics = NotificationDetails(
+//     android: androidPlatformChannelSpecifics,
+//   );
+
+//   await flutterLocalNotificationsPlugin.show(
+//     0,
+//     'Se detectó una emergencia!',
+//     'Descartar si se encuentra bien',
+//     platformChannelSpecifics,
+//     payload: 'item x',
+//   );
+// }

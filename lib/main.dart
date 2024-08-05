@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:falldetapp/domain/models/log.dart';
 import 'package:falldetapp/providers/buttonProvider.dart';
 import 'package:falldetapp/providers/devicesProvider.dart';
 import 'package:falldetapp/services/BLEService.dart';
 import 'package:falldetapp/services/apiService.dart';
+import 'package:falldetapp/services/logService.dart';
 import 'package:falldetapp/services/notificactionService.dart';
 import 'package:falldetapp/utils/util.dart';
 import 'package:falldetapp/views/connectionScreen.dart';
@@ -88,6 +90,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool _isDialogShowing = false;
   var buttonProvider;
   ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
+  final LogService logService = LogService();
+
   @override
   void initState() {
     super.initState();
@@ -276,6 +280,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Future<void> _sendAlert() async {
     _isAlertSending = true;
     await showNotificationWithSound();
+    // Detalles detalle = Detalles(tipoEvento:"conexión", sensores:sensoresEnlazados, accion: "Enlace con la app");
+    // Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Enlace con la app", detalles: detalle);
+    // logService.writeLogEvent(logEvent);
     if (!_isDialogShowing) {
       _showFallDetectedCard();
     }    

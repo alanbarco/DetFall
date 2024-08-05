@@ -1,6 +1,9 @@
+import 'package:falldetapp/domain/models/log.dart';
 import 'package:falldetapp/providers/buttonProvider.dart';
 import 'package:falldetapp/providers/devicesProvider.dart';
 import 'package:falldetapp/services/BLEService.dart';
+import 'package:falldetapp/services/logService.dart';
+import 'package:falldetapp/services/notificactionService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -27,11 +30,14 @@ class ConnectionView extends StatefulWidget {
 class _ConnectionViewState extends State<ConnectionView> {
   StreamSubscription? _scanSubscription;
   late StreamSubscription<BluetoothDevice>? _disconnectSubscription;
+  final LogService logService = LogService();
   bool _isLoading = true;
   List<BluetoothDevice> filteredDevices = [];
   List<BluetoothDevice> connectedDevices = [];
   bool hasFallDetectorConnected = false;
   bool hasVoiceDetectorConnected = false;
+  bool hasVoiceDetector = false;
+  bool hasFallDetector = false;
   var devicesProvider;
   var buttonProvider;
 
@@ -70,6 +76,12 @@ class _ConnectionViewState extends State<ConnectionView> {
   }
 
   void connectToDevices() async {
+    List<String> sensoresEnlazados = <String>[];
+    if(hasFallDetector) sensoresEnlazados.add("Movimientos");
+    if(hasVoiceDetector) sensoresEnlazados.add("Voz");
+    Detalles detalle = Detalles(tipoEvento:"conexión", sensores:sensoresEnlazados,accion: "Enlace con la app");
+    Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Enlace con la app", detalles: detalle);
+    logService.writeLogEvent(logEvent);
     buttonProvider.changeStatus(false);
     setState(() {
       _isLoading = true;
@@ -90,6 +102,7 @@ class _ConnectionViewState extends State<ConnectionView> {
     setState(() {
       _isLoading = false;
     });
+
   }
 
   @override
@@ -112,10 +125,10 @@ class _ConnectionViewState extends State<ConnectionView> {
         final scanResults = snapshot.data!;
         filteredDevices = scanResults.map((result) => result.device).toList();
 
-        bool hasFallDetector = filteredDevices.any((device) {
+        hasFallDetector = filteredDevices.any((device) {
           return device.name.contains("DetFall");
         });
-        bool hasVoiceDetector = filteredDevices.any((device) {
+        hasVoiceDetector = filteredDevices.any((device) {
           return device.name.contains("Sacha");
         });
         if (devicesProviderWatch.isNotEmpty) {
@@ -256,6 +269,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                             fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
+                    ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
                   ],
                 );
               }
@@ -271,6 +285,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
+              ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
             ],
           );
         } else {
@@ -340,5 +355,9 @@ class _ConnectionViewState extends State<ConnectionView> {
         }
       },
     );
+  }
+  void _botonTmp(){
+    showNotificationWithSound();
+    print("Presionaste el boton pa");
   }
 }
