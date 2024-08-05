@@ -63,7 +63,7 @@ class _FormScreenState extends State<FormScreen> {
               Text("Por favor ingresa tus datos para continuar",
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 50),
+              SizedBox(height: 4),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -118,7 +118,7 @@ class _FormScreenState extends State<FormScreen> {
                     onPrimary: Colors.white,
                     minimumSize: Size(double.infinity, 50)),
                 onPressed: _saveForm,
-                child: Text('Enviar'),
+                child: Text('Guardar'),
               ),
             ],
           ),

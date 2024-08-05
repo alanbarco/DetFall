@@ -61,7 +61,6 @@ override fun onCreate(savedInstanceState: Bundle?) {
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVibrate(longArrayOf(0, 4000))
-            .setNotificationPolicy(NotificationManager.INTERRUPTION_FILTER_NONE)
             .setSound(Uri.parse("android.resource://${packageName}/raw/notification"))
 
         with(NotificationManagerCompat.from(this)) {

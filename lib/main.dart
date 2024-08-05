@@ -290,7 +290,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   void _startCountdown() {
      _remainingTime = 60;
-    _timerCard = Timer.periodic(Duration(milliseconds: 1200), (timer) {
+    _timerCard = Timer.periodic(Duration(milliseconds: 1100), (timer) {
       _remainingTime--;
       _countdownNotifier.value = _remainingTime;
       if (_remainingTime <= 0) {

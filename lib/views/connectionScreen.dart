@@ -97,7 +97,7 @@ class _ConnectionViewState extends State<ConnectionView> {
     }
     widget.onDevicesConnected(connectedDevices);
 
-    await Future.delayed(Duration(seconds: 30));
+    await Future.delayed(Duration(seconds: 60));
     buttonProvider.changeStatus(true);
     setState(() {
       _isLoading = false;
@@ -248,6 +248,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                                   fixedSize: const Size(200, 50),
                                 ),
                                 onPressed: () async {
+                                  logService.sendToAPI();
                                   for (var device in widget.connectedDevices!) {
                                     await widget.bleService.disconnect(device);
                                     widget.onDevicesConnected([]);
@@ -269,7 +270,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                             fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
-                    ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
+                    // ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
                   ],
                 );
               }
@@ -285,7 +286,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
-              ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
+              // ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
             ],
           );
         } else {
