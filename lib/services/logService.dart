@@ -48,7 +48,7 @@ class LogService {
 
   Future<void> clearLogFile() async {
     final logFile = await _getLogFile();
-    await logFile.writeAsString(''); // Escribir una cadena vacía para borrar el contenido
+    await logFile.writeAsString('');
   }
 }
  

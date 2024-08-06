@@ -74,15 +74,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   late Timer _timerCard;
   int _remainingTime = 60; // Tiempo en segundos
   late ValueNotifier<int> _countdownNotifier;
-  // bool _isApiCallCompleted = false;
-  // Completer<void> _apiCallCompleter = Completer<void>();
+  Map<String, String> idCaracteristas = {"19b10001-e8f2-537e-4f6c-d104768a1214": "Movimientos"
+  ,"143c87e6-058a-43e7-9d75-fbbea5c3c157": "Voz"};
 
-  List<String> serviciosBLE = [
+  List<String> get serviciosBLE => [
     "143c87e6-058a-43e7-9d75-fbbea5c3c157",
     "19b10000-e8f2-537e-4f6c-d104768a1214",
-    "19b10001-e8f2-537e-4f6c-d104768a1214",
+    "19b10001-e8f2-537e-4f6c-d104768a1214"
   ];
-
   int _signalCount = 0;
   Timer? _timer;
   bool _isAlertSending = false;
@@ -245,6 +244,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   void _listenToCharacteristic(BluetoothCharacteristic c) {
     c.setNotifyValue(true);
+    List<String> sensores = [];
     c.value.listen((value) {
       if (value.isNotEmpty) {
         // Convertir la lista de enteros a String
@@ -268,7 +268,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           });
 
           if (_signalCount > 0) {
-            _sendAlert();
+            String? sensor = idCaracteristas[c.uuid.toString()];
+            sensores.add(sensor!);
+            _sendAlert(sensores);
             // _isAlertSending = true;
             _signalCount = 0;
           }
@@ -277,12 +279,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _sendAlert() async {
+  Future<void> _sendAlert(List<String> sensores) async {
     _isAlertSending = true;
     await showNotificationWithSound();
-    // Detalles detalle = Detalles(tipoEvento:"conexión", sensores:sensoresEnlazados, accion: "Enlace con la app");
-    // Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Enlace con la app", detalles: detalle);
-    // logService.writeLogEvent(logEvent);
+    Detalles detalle = Detalles(tipoEvento:"señal", sensores:sensores, accion: "Envío de señal");
+    Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Envío de señal", detalles: detalle);
+    logService.writeLogEvent(logEvent);
     if (!_isDialogShowing) {
       _showFallDetectedCard();
     }    
