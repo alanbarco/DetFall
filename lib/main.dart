@@ -242,9 +242,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 
+  List<String> sensores = [];
   void _listenToCharacteristic(BluetoothCharacteristic c) {
+    sensores = [];
     c.setNotifyValue(true);
-    List<String> sensores = [];
     c.value.listen((value) {
       if (value.isNotEmpty) {
         // Convertir la lista de enteros a String
@@ -271,7 +272,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             String? sensor = idCaracteristas[c.uuid.toString()];
             sensores.add(sensor!);
             _sendAlert(sensores);
-            // _isAlertSending = true;
             _signalCount = 0;
           }
         }
@@ -282,11 +282,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Future<void> _sendAlert(List<String> sensores) async {
     _isAlertSending = true;
     await showNotificationWithSound();
-    Detalles detalle = Detalles(tipoEvento:"señal", sensores:sensores, accion: "Envío de señal");
-    Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Envío de señal", detalles: detalle);
-    logService.writeLogEvent(logEvent);
     if (!_isDialogShowing) {
-      _showFallDetectedCard();
+      _showFallDetectedCard(sensores);
     }    
   }
 
@@ -297,7 +294,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       _countdownNotifier.value = _remainingTime;
       if (_remainingTime <= 0) {
         _timerCard.cancel();        
-        print("ENVIANDO ALERTA...");
+        
         if(_isDialogShowing){
           Navigator.of(context).pop();
           _isDialogShowing = false;
@@ -311,14 +308,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     bool apiCallSuccess = await apiService.apiPrueba();
     if (apiCallSuccess) {
       notificacionCaida();
+      Detalles detalle = Detalles(tipoEvento:"alerta", sensores:sensores, accion: "Envío de alerta exitoso");
+      Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Envío de alerta exitoso", detalles: detalle);
+      logService.writeLogEvent(logEvent);
     } else {
       notificacionCaidaError();
+      Detalles detalle = Detalles(tipoEvento:"alerta", sensores:sensores, accion: "Envío de alerta fallido");
+      Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Envío de alerta fallido", detalles: detalle);
+      logService.writeLogEvent(logEvent);
     }
     _isAlertSending = false;
   }
 
 
-  void _showFallDetectedCard() async {
+  void _showFallDetectedCard(List<String> sensores) async {
     _startCountdown();
     setState(() {
       _isDialogShowing = true;
@@ -355,6 +358,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 ),
                 onPressed: () async {
                   await flutterLocalNotificationsPlugin.cancel(0);
+                  Detalles detalle = Detalles(tipoEvento:"alerta", sensores:sensores, accion: "Rechazo de alerta");
+                  Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Rechazo de alerta", detalles: detalle);
+                  logService.writeLogEvent(logEvent);
                   setState(() {
                     _isDialogShowing = false;
                     _isAlertSending = false;
