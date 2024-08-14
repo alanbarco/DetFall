@@ -105,20 +105,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // @override
-  // void didChangeAppLifecycleState(AppLifecycleState state) {
-  //   if (state == AppLifecycleState.resumed && segundoPlano) {
-  //     if (_isAlertSending && !_isDialogShowing) {
-  //       _showFallDetectedCard();
-  //     } else if (!_isAlertSending && _isDialogShowing) {
-  //       Navigator.of(context).pop();
-  //       _isDialogShowing = false;
-  //     }
-  //     segundoPlano = false;
-  //   } else if (state == AppLifecycleState.inactive) {
-  //     segundoPlano = true;
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -248,12 +234,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     c.setNotifyValue(true);
     c.value.listen((value) {
       if (value.isNotEmpty) {
-        // Convertir la lista de enteros a String
         String stringValue = String.fromCharCodes(value);
 
-        // Comprobar el primer carácter y almacenar el resto de la cadena
         if (stringValue[0] == '1') {
-          String data = stringValue.substring(2); // Almacena "0001" en data
+          String data = stringValue.substring(2); 
 
           _timer?.cancel();
           if (_isAlertSending) {

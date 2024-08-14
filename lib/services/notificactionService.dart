@@ -13,15 +13,6 @@ Future<void> initNotifications() async {
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-Future<void> notificacionConexion() async{
-  const AndroidNotificationDetails andoirdNotificationDetails = 
-  AndroidNotificationDetails('channelId', 'channelName', importance: Importance.high, priority: Priority.high, ticker: 'ticker');
-
-  const NotificationDetails notificationDetails = NotificationDetails(android: andoirdNotificationDetails);
-
-  await flutterLocalNotificationsPlugin
-  .show(1, 'Detector conectado', 'Se logró conectar el detector de caídas correctamente', notificationDetails);
-}
 Future<void> notificacionCaida() async{
   const AndroidNotificationDetails andoirdNotificationDetails = 
   AndroidNotificationDetails('channelId', 'channelName', importance: Importance.high, priority: Priority.high, ticker: 'ticker');
@@ -53,26 +44,26 @@ Future<void> showNotificationWithSound() async {
     }
   }
 
-// Future<void> showNotificationWithSound() async {
-//   AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-//     'Detección de emergencia', 'Se detectó una señal de emergencia ¿Estás bien?',
-//     importance: Importance.max,
-//     priority: Priority.high,
-//     sound: RawResourceAndroidNotificationSound('notification'),
-//     playSound: true,
-//     enableVibration: true,
-//     vibrationPattern: Int64List.fromList([0, 4000]),
-//     audioAttributesUsage: AudioAttributesUsage.alarm,
-//   );
-//   NotificationDetails platformChannelSpecifics = NotificationDetails(
-//     android: androidPlatformChannelSpecifics,
-//   );
+Future<void> notificationBattery() async {
+  AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'NOTIFICACIÓN BATERÍA', 'Se desconectó el dispositivo',
+    importance: Importance.max,
+    priority: Priority.high,
+    sound: RawResourceAndroidNotificationSound('notification'),
+    playSound: true,
+    enableVibration: true,
+    vibrationPattern: Int64List.fromList([0, 4000]),
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+  );
+  NotificationDetails platformChannelSpecifics = NotificationDetails(
+    android: androidPlatformChannelSpecifics,
+  );
 
-//   await flutterLocalNotificationsPlugin.show(
-//     0,
-//     'Se detectó una emergencia!',
-//     'Descartar si se encuentra bien',
-//     platformChannelSpecifics,
-//     payload: 'item x',
-//   );
-// }
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    'NOTIFICACIÓN BATERÍA',
+    'Se desconectó el dispositivo',
+    platformChannelSpecifics,
+    payload: 'item x',
+  );
+}

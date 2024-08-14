@@ -6,7 +6,7 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:permission_handler/permission_handler.dart' as perm;
 import 'package:flutter/services.dart';
 import 'package:location/location.dart';
-
+import 'notificactionService.dart';
 class BLEService {
   final blue.FlutterBlue _flutterBlue = blue.FlutterBlue.instance;
   bool _isRequestingPermission = false;
@@ -87,8 +87,10 @@ class BLEService {
   device.state.listen((state) {
     if (state == blue.BluetoothDeviceState.disconnected) {
       _deviceDisconnectedController.add(device);
+      notificationBattery();
     }
   });
+  
 }
 
 

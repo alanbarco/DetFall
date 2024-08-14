@@ -286,7 +286,6 @@ class _ConnectionViewState extends State<ConnectionView> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
-              // ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
             ],
           );
         } else {
