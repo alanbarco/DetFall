@@ -27,6 +27,7 @@ class Log {
 class Detalles {
     String tipoEvento;
     List<String> sensores;
+    String? sensor;
     String accion;
     Detalles({
         required this.tipoEvento,
@@ -38,6 +39,7 @@ class Detalles {
     Map<String, dynamic> toJson() => {
         "tipo_evento": tipoEvento,
         "sensores_enlazados": List<dynamic>.from(sensores.map((x) => x)),
+        "sensor_signal": sensor,
         "accion": accion
     };
 }

@@ -75,13 +75,29 @@ class _ConnectionViewState extends State<ConnectionView> {
     });
   }
 
-  void connectToDevices() async {
+  List<String> _getSensoresConectados(){
     List<String> sensoresEnlazados = <String>[];
     if(hasFallDetector) sensoresEnlazados.add("Movimientos");
     if(hasVoiceDetector) sensoresEnlazados.add("Voz");
+    return sensoresEnlazados;
+  }
+
+  void _logDisconnect(){
+    List<String> sensoresEnlazados = _getSensoresConectados();
+    Detalles detalle = Detalles(tipoEvento:"desconexión", sensores:sensoresEnlazados,accion: "Desconexión con la app");
+    Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Desconexión con la app", detalles: detalle);
+    logService.writeLogEvent(logEvent);
+  }
+
+  void _logConnect(){
+    List<String> sensoresEnlazados = _getSensoresConectados();
     Detalles detalle = Detalles(tipoEvento:"conexión", sensores:sensoresEnlazados,accion: "Enlace con la app");
     Log logEvent = Log(timestamp: DateTime.now(), nombreDispositivo: '001', evento: "Enlace con la app", detalles: detalle);
     logService.writeLogEvent(logEvent);
+  }
+
+  void connectToDevices() async {   
+    _logConnect(); 
     buttonProvider.changeStatus(false);
     setState(() {
       _isLoading = true;
@@ -248,6 +264,7 @@ class _ConnectionViewState extends State<ConnectionView> {
                                   fixedSize: const Size(200, 50),
                                 ),
                                 onPressed: () async {
+                                  _logDisconnect();
                                   logService.sendToAPI();
                                   for (var device in widget.connectedDevices!) {
                                     await widget.bleService.disconnect(device);

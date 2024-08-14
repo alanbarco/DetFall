@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:falldetapp/domain/models/alerta.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,11 +8,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   String token =
       "23dc8f89b9bc7d616ec410433a088385bf41b15cf0febf2fdbf83f1519f619b5";
-  Future<bool> sendAlertToExternalApi(String apiUrl) async {
-    String locationMessage = await _getCurrentLocation();
-    String code = "Alerta!! Estoy en peligro, mi ubicación:";
+  Future<bool> sendAlertToExternalApi(String sensor) async {
+    Ubicacion ubicacion = await _getCurrentLocation();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? name = prefs.getString('nombre');
+    String? phone = prefs.getString('celular');
+    DateTime fecha = DateTime.now();
+    Alerta alerta = Alerta(dispositivo: "001", sensor: sensor, ubicacion: ubicacion, nombre: name!, telefono: phone!, fecha: fecha);
 
-    return await _sendAlertToApi(apiUrl, code, locationMessage);
+    return await _sendAlertToApi(alerta);
   }
   Future<bool> apiPrueba() async {
     return true;
@@ -33,37 +38,27 @@ class ApiService {
     //   return false;
     // }
   }
-  Future<String> _getCurrentLocation() async {
+  Future<Ubicacion> _getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
+    Ubicacion ubicacion = Ubicacion(latitud: position.latitude, longitud: position.longitude);
     //return "Lat: ${position.latitude}, Long: ${position.longitude}";
-    return "https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
+    return ubicacion;
   }
 
-  Future<bool> _sendAlertToApi(
-      String apiUrl, String message, String location) async {
+  Future<bool> _sendAlertToApi(Alerta alerta) async {    
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse("apiUrl"),
         headers: {
           'x-api-key': token,
           'Content-Type': 'application/json',
         },
-        body: '{"mensaje": "$message", "ubicacion": "$location"}',
+        body: alerta.toJson(),
       );
-
-      if (response.statusCode == 200) {
-        print(response);
-        print('Alerta enviada éxitosamente a API externa.');
-        return true;
-      } else {
-        print(
-            'Error al enviar alerta a API externa. Status code: ${response.statusCode}');
-        return false;
-      }
+      return (response.statusCode == 200);
     } catch (e) {
-      print('Error al enviar alerta a API externa: $e');
       return false;
     }
   }

@@ -82,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     "19b10000-e8f2-537e-4f6c-d104768a1214",
     "19b10001-e8f2-537e-4f6c-d104768a1214"
   ];
+  List<String> sensores = [];
   int _signalCount = 0;
   Timer? _timer;
   bool _isAlertSending = false;
@@ -228,7 +229,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 
-  List<String> sensores = [];
+  
   void _listenToCharacteristic(BluetoothCharacteristic c) {
     sensores = [];
     c.setNotifyValue(true);
@@ -255,7 +256,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           if (_signalCount > 0) {
             String? sensor = idCaracteristas[c.uuid.toString()];
             sensores.add(sensor!);
-            _sendAlert(sensores);
+            _sendAlert();
             _signalCount = 0;
           }
         }
@@ -263,11 +264,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _sendAlert(List<String> sensores) async {
+  Future<void> _sendAlert() async {
     _isAlertSending = true;
     await showNotificationWithSound();
     if (!_isDialogShowing) {
-      _showFallDetectedCard(sensores);
+      _showFallDetectedCard();
     }    
   }
 
@@ -305,7 +306,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
 
-  void _showFallDetectedCard(List<String> sensores) async {
+  void _showFallDetectedCard() async {
     _startCountdown();
     setState(() {
       _isDialogShowing = true;
