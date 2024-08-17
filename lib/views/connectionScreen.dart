@@ -112,7 +112,6 @@ class _ConnectionViewState extends State<ConnectionView> {
       }
     }
     widget.onDevicesConnected(connectedDevices);
-
     await Future.delayed(Duration(seconds: 60));
     buttonProvider.changeStatus(true);
     setState(() {
@@ -287,7 +286,6 @@ class _ConnectionViewState extends State<ConnectionView> {
                             fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
-                    // ElevatedButton(onPressed: _botonTmp, child: Text("Presionar"))
                   ],
                 );
               }
@@ -373,8 +371,5 @@ class _ConnectionViewState extends State<ConnectionView> {
       },
     );
   }
-  void _botonTmp(){
-    showNotificationWithSound();
-    print("Presionaste el boton pa");
-  }
+
 }

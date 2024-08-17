@@ -172,9 +172,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       }
                     }
                   } else {
-                    // Si no está conectado, conéctate primero
                     await device.connect();
-                    // Verifica nuevamente si el dispositivo está conectado
                     state = await device.state.first;
                     if (state == BluetoothDeviceState.connected) {
                       List<BluetoothService> services =

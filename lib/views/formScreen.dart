@@ -68,15 +68,15 @@ class _FormScreenState extends State<FormScreen> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Nombre completo',
-                  labelStyle: TextStyle(color: Colors.black), // Color del label
+                  labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
                         color: Color.fromARGB(
-                            221, 20, 70, 124)), // Borde cuando está enfocado
+                            221, 20, 70, 124)), 
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
-                        color: Colors.black), // Borde cuando está habilitado
+                        color: Colors.black), 
                   ),
                 ),
                 validator: (value) {
@@ -90,15 +90,15 @@ class _FormScreenState extends State<FormScreen> {
                 controller: _phoneController,
                 decoration: InputDecoration(
                   labelText: 'Número Celular',
-                  labelStyle: TextStyle(color: Colors.black), // Color del label
+                  labelStyle: TextStyle(color: Colors.black), 
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
                         color: Color.fromARGB(
-                            221, 20, 70, 124)), // Borde cuando está enfocado
+                            221, 20, 70, 124)), 
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
-                        color: Colors.black), // Borde cuando está habilitado
+                        color: Colors.black), 
                   ),
                 ),
                 keyboardType: TextInputType.phone,

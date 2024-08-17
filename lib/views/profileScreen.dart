@@ -39,14 +39,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Icon(
               Icons.person,
-              size: 30, // Tamaño del ícono
+              size: 30, 
             ),
-            SizedBox(width: 10), // Espacio entre el ícono y el texto
+            SizedBox(width: 10),
             Text(
               'Perfil',
               style: TextStyle(
-                fontSize: 30, // Tamaño de letra más grande
-                fontWeight: FontWeight.bold, // Letra negrita
+                fontSize: 30, 
+                fontWeight: FontWeight.bold, 
               ),
             ),
           ],

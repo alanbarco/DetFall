@@ -34,12 +34,6 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  // _loadMainScreen() async {
-  //   await Future.delayed(Duration(seconds: 3)); 
-  //   Navigator.of(context).pushReplacement(MaterialPageRoute(
-  //     builder: (context) => MyHomePage(), 
-  //   ));
-  // }
 
   @override
   Widget build(BuildContext context) {
