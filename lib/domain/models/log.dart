@@ -18,7 +18,7 @@ class Log {
 
     Map<String, dynamic> toJson() => {
         "timestamp": timestamp.toIso8601String(),
-        "nombre_dispositivo": nombreDispositivo,
+        "nombreDispositivo": nombreDispositivo,
         "evento": evento,
         "detalles": detalles.toJson(),
     };
@@ -37,9 +37,9 @@ class Detalles {
 
 
     Map<String, dynamic> toJson() => {
-        "tipo_evento": tipoEvento,
-        "sensores_enlazados": List<dynamic>.from(sensores.map((x) => x)),
-        "sensor_signal": sensor,
+        "tipoEvento": tipoEvento,
+        "sensores": List<dynamic>.from(sensores.map((x) => x)),
+        "sensor": sensor,
         "accion": accion
     };
 }

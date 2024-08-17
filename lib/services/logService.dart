@@ -27,12 +27,12 @@ class LogService {
   Future<void> sendToAPI() async {
     final logFile = await _getLogFile();
     final logs = await logFile.readAsString();
-    final logsArray = logs
-        .split('\n')
-        .where((log) => log.isNotEmpty)
-        .map((log) => jsonDecode(log))
-        .toList();
-    String url = '${Config.apiUrl}/alerta';
+    final logsArray = logs       
+    .split('\n')       
+    .where((log) => log.isNotEmpty)       
+    .map((log) => jsonDecode(log)) // Asegúrate de que jsonDecode(log) devuelva un Map<String, dynamic>       
+    .toList();
+    String url = '${Config.apiUrl}/logs';
     String apiKey = Config.apiKey!;
     try {
       final response = await http.post(

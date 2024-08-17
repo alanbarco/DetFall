@@ -55,7 +55,7 @@ class ApiService {
           'X-API-Key': apiKey,
           'Content-Type': 'application/json',
         },
-        body: alerta.toJson(),
+        body: jsonEncode(alerta.toJson()),
       );
       return (response.statusCode == 200);
     } catch (e) {

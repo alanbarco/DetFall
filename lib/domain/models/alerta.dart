@@ -40,7 +40,7 @@ class Alerta {
         "nombre": nombre,
         "telefono": telefono,
         "sensor": sensor,
-        "fecha": fecha,
+        "fecha": fecha.toIso8601String(),
         "dispositivo": dispositivo,
     };
 }

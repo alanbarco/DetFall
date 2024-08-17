@@ -22,7 +22,7 @@ import 'package:timer_count_down/timer_count_down.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(); 
+  await dotenv.load(fileName: ".env");
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
   runApp(MultiProvider(providers: [
