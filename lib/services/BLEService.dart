@@ -87,7 +87,6 @@ class BLEService {
   device.state.listen((state) {
     if (state == blue.BluetoothDeviceState.disconnected) {
       _deviceDisconnectedController.add(device);
-      notificationBattery();
     }
   });
   

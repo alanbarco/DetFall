@@ -43,27 +43,3 @@ Future<void> showNotificationWithSound() async {
       print("Failed to show notification: '${e.message}'.");
     }
   }
-
-Future<void> notificationBattery() async {
-  AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'NOTIFICACIÓN BATERÍA', 'Se desconectó el dispositivo',
-    importance: Importance.max,
-    priority: Priority.high,
-    sound: RawResourceAndroidNotificationSound('notification'),
-    playSound: true,
-    enableVibration: true,
-    vibrationPattern: Int64List.fromList([0, 4000]),
-    audioAttributesUsage: AudioAttributesUsage.alarm,
-  );
-  NotificationDetails platformChannelSpecifics = NotificationDetails(
-    android: androidPlatformChannelSpecifics,
-  );
-
-  await flutterLocalNotificationsPlugin.show(
-    0,
-    'NOTIFICACIÓN BATERÍA',
-    'Se desconectó el dispositivo',
-    platformChannelSpecifics,
-    payload: 'item x',
-  );
-}

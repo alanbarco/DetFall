@@ -14,6 +14,7 @@ import 'package:falldetapp/views/splashScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ import 'package:timer_count_down/timer_count_down.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(); 
   HttpOverrides.global = MyHttpOverrides();
   await initNotifications();
   runApp(MultiProvider(providers: [
@@ -73,6 +75,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final ApiService apiService = ApiService();
   late Timer _timerCard;
   int _remainingTime = 60; // Tiempo en segundos
+  String? sensor = '';
   late ValueNotifier<int> _countdownNotifier;
   Map<String, String> idCaracteristas = {"19b10001-e8f2-537e-4f6c-d104768a1214": "Movimientos"
   ,"143c87e6-058a-43e7-9d75-fbbea5c3c157": "Voz"};
@@ -254,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           });
 
           if (_signalCount > 0) {
-            String? sensor = idCaracteristas[c.uuid.toString()];
+            sensor = idCaracteristas[c.uuid.toString()];
             sensores.add(sensor!);
             _sendAlert();
             _signalCount = 0;
@@ -290,7 +293,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
   Future<void> _sendAlertToApi() async {
-    bool apiCallSuccess = await apiService.apiPrueba();
+    bool apiCallSuccess = await apiService.sendAlertToExternalApi(sensor!);
     if (apiCallSuccess) {
       notificacionCaida();
       Detalles detalle = Detalles(tipoEvento:"alerta", sensores:sensores, accion: "Envío de alerta exitoso");
